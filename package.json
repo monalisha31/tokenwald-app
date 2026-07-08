@@ -1,0 +1,19 @@
+{
+  "name": "tokenwald-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tokenwald product prototype: frontend + live XRPL Testnet backend",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "dotenv": "^16.6.1",
+    "express": "^4.19.0",
+    "xrpl": "^5.0.0"
+  }
+}

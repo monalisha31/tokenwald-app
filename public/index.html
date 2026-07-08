@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .25s ease,color .25s ease}
+*{box-sizing:border-box}
+:root{--bg:#0f1115;--surface:#14171d;--surface2:#12151b;--raised:#181c24;--goldwash:#191509;--text:#e8eaf0;--t2:#c6cdda;--t3:#8b93a3;--t4:#5b6372;--t5:#3a4150;--gold:#D9A94B;--goldgrad:linear-gradient(90deg,#D9A94B,#E8CC8A);--line:255,255,255;--nav:15,17,21;--heroglow:rgba(217,169,75,.13)}
+:root[data-theme="light"]{--bg:#ffffff;--surface:#ffffff;--surface2:#f6f7f8;--raised:#f2f3f4;--goldwash:#f7f1e3;--text:#191b21;--t2:#3f4653;--t3:#5b6472;--t4:#8a909c;--t5:#c2c6cf;--gold:#8a6b28;--goldgrad:linear-gradient(90deg,#8a6b28,#a3854a);--line:22,24,32;--nav:255,255,255;--heroglow:rgba(217,169,75,.05)}
+::selection{background:rgba(217,169,75,.3)}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--raised);border-radius:4px}::-webkit-scrollbar-track{background:transparent}
+@keyframes twPulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes twFlow{0%{stroke-dashoffset:24}100%{stroke-dashoffset:0}}
+@keyframes twFadeUp{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes twToast{0%{opacity:0;transform:translateY(14px) scale(.97)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes twGlow{0%,100%{box-shadow:0 0 0 0 rgba(217,169,75,0)}50%{box-shadow:0 0 22px 0 rgba(217,169,75,.25)}}
+@keyframes twSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes twBlink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes twSweep{0%{transform:translateX(-100%)}100%{transform:translateX(240%)}}
+input,select,textarea,button{font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:1px solid rgba(217,169,75,.5)}
+button{cursor:pointer}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--bg);display:flex;flex-direction:column">
+
+  <!-- ══ TOP NAV ══ -->
+  <div data-screen-label="Top Nav" style="position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:6px;padding:0 20px;height:58px;background:rgba(var(--nav),.86);backdrop-filter:blur(14px);border-bottom:1px solid rgba(var(--line),.07)">
+    <div onClick="{{ goLanding }}" style="display:flex;align-items:center;cursor:pointer;margin-right:18px">
+      <div style="font-family:'Fraunces';font-weight:700;font-size:19px;letter-spacing:-.4px">Token<span style="color:var(--gold)">Wald</span></div>
+    </div>
+    <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+      <button onClick="{{ n.go }}" style="border:none;background:{{ n.bg }};color:{{ n.color }};font-size:13.5px;font-weight:{{ n.weight }};padding:7px 13px;border-radius:8px;transition:all .15s">{{ n.label }}</button>
+    </sc-for>
+    <a href="/docs.html" target="_blank" style="text-decoration:none;color:var(--t3);font-size:13.5px;font-weight:500;padding:7px 13px;border-radius:8px;transition:all .15s;display:inline-flex;align-items:center;gap:5px">Docs <span style="font-size:10px;opacity:.6">↗</span></a>
+    <div style="flex:1"></div>
+    <button onClick="{{ toggleTheme }}" title="Toggle theme" style="position:relative;width:54px;height:27px;border-radius:999px;border:1px solid rgba(var(--line),.14);background:var(--surface2);padding:0;flex:none;margin-right:10px">
+      <span style="position:absolute;top:2px;left:{{ knobLeft }};width:21px;height:21px;border-radius:50%;background:#D9A94B;display:flex;align-items:center;justify-content:center;font-size:11px;transition:left .22s ease">{{ themeIcon }}</span>
+    </button>
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(var(--line),.09);border-radius:9px;background:var(--surface)">
+      <div style="width:7px;height:7px;border-radius:50%;background:#34d399;animation:twPulse 2s infinite"></div>
+      <span style="font-family:'JetBrains Mono';font-size:12.5px;color:var(--gold);font-weight:600">XAU {{ priceStr }} €/g</span>
+      <span style="font-family:'JetBrains Mono';font-size:11px;color:{{ deltaColor }}">{{ deltaStr }}</span>
+    </div>
+  </div>
+
+  <!-- ══ GUIDED FLOW BAR ══ -->
+  <sc-if value="{{ isFlow }}" hint-placeholder-val="{{ false }}">
+    <div style="position:sticky;top:58px;z-index:55;background:rgba(var(--nav),.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(var(--line),.06)">
+      <div style="max-width:1460px;margin:0 auto;padding:0 24px;height:54px;display:flex;align-items:center;gap:4px;overflow-x:auto">
+        <span style="font-size:9.5px;letter-spacing:.9px;font-weight:700;color:#5b6372;margin-right:8px;flex:none">GUIDED FLOW</span>
+        <sc-for list="{{ flowSteps }}" as="f" hint-placeholder-count="4">
+          <button onClick="{{ f.go }}" style="display:flex;align-items:center;gap:8px;border:none;background:{{ f.pillBg }};padding:6px 12px 6px 7px;border-radius:9px;flex:none">
+            <span style="width:20px;height:20px;border-radius:50%;background:{{ f.circleBg }};border:1.5px solid {{ f.circleBorder }};color:{{ f.circleColor }};display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono'">{{ f.mark }}</span>
+            <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.15">
+              <span style="font-size:12.5px;font-weight:600;color:{{ f.labelColor }}">{{ f.label }}</span>
+              <span style="font-size:9px;color:#5b6372;letter-spacing:.3px">{{ f.sub }}</span>
+            </span>
+          </button>
+          <sc-if value="{{ f.arrow }}" hint-placeholder-val="{{ true }}">
+            <span style="color:#3a4150;flex:none;font-size:12px">→</span>
+          </sc-if>
+        </sc-for>
+        <div style="flex:1;min-width:12px"></div>
+        <button onClick="{{ flowNext }}" style="flex:none;border:1px solid rgba(217,169,75,.4);background:rgba(217,169,75,.1);color:var(--gold);font-size:12.5px;font-weight:700;padding:8px 15px;border-radius:9px">{{ flowNextLabel }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ══ VIEWS ══ -->
+  <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="Landing">
+      <!-- HERO -->
+<div style="position:relative;overflow:hidden;border-bottom:1px solid rgba(var(--line),.06)">
+  <div style="position:absolute;top:-220px;left:50%;transform:translateX(-50%);width:900px;height:520px;background:radial-gradient(ellipse at center,var(--heroglow),transparent 65%);pointer-events:none"></div>
+  <div style="max-width:1100px;margin:0 auto;padding:92px 24px 72px;text-align:center;position:relative">
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid rgba(217,169,75,.3);border-radius:999px;font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.4px">Non-custodial infrastructure on the XRP Ledger</div>
+    <h1 style="font-family:'Fraunces';font-size:clamp(38px,5.6vw,60px);font-weight:600;line-height:1.08;margin:26px 0 0;letter-spacing:-.5px">The compliant way to<br>tokenize <span style="color:var(--gold);font-style:italic">precious metals</span></h1>
+    <p style="font-size:17px;color:var(--t3);line-height:1.65;max-width:640px;margin:22px auto 0">TokenWald is tokenization-as-a-service for precious metals. Issue redeemable, vault-backed metal tokens — with real-time proof-of-reserve, built-in compliance, and cross-jurisdiction recognition. Fully non-custodial: we never hold the asset, the keys, or the money.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap">
+      <button onClick="{{ goPg }}" style="border:none;background:#D9A94B;color:#0f1115;font-weight:700;font-size:15px;padding:14px 30px;border-radius:12px">Tokenization Sandbox →</button>
+      <a href="mailto:tokenwald@gmail.com" style="text-decoration:none;border:1px solid rgba(var(--line),.16);background:transparent;color:var(--text);font-weight:600;font-size:15px;padding:14px 28px;border-radius:12px;display:inline-block">Contact us</a>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:26px;flex-wrap:wrap">
+      <sc-for list="{{ flowSteps }}" as="f" hint-placeholder-count="4">
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--t3)"><span style="width:16px;height:16px;border-radius:50%;background:{{ f.color }}22;border:1px solid {{ f.color }};color:{{ f.color }};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'JetBrains Mono'">{{ f.n }}</span>{{ f.sub }}<sc-if value="{{ f.arrow }}" hint-placeholder-val="{{ true }}"><span style="color:#3a4150;margin-left:2px">→</span></sc-if></span>
+      </sc-for>
+    </div>
+    <div style="font-size:12px;color:#5b6372;margin-top:22px">"Shopify for tokenized commodities" · the issuer is the principal, TokenWald is software</div>
+  </div>
+</div>
+
+<!-- TUTORIAL VIDEO -->
+<div style="max-width:980px;margin:0 auto;padding:8px 24px 74px">
+  <div style="text-align:center;margin-bottom:22px">
+    <div style="font-size:11px;letter-spacing:1.2px;font-weight:700;color:var(--gold)">Watch it in action</div>
+    <h2 style="font-family:'Fraunces';font-size:28px;font-weight:700;margin:10px 0 8px">A walkthrough of the tokenization sandbox</h2>
+    <div style="font-size:14px;color:var(--t3);max-width:560px;margin:0 auto;line-height:1.6">Real XRPL Testnet transactions, live compliance gating, and the full mint → gate → automate → cross-border flow — no slides, just the product.</div>
+  </div>
+  <div style="border-radius:18px;overflow:hidden;border:1px solid rgba(var(--line),.1);box-shadow:0 24px 70px -24px rgba(0,0,0,.55);background:#000">
+    <video controls preload="metadata" playsinline style="width:100%;display:block;max-height:640px;background:#000">
+      <source src="/media/tokenwald-sandbox-tutorial.mp4" type="video/mp4">
+      Your browser doesn't support embedded video — <a href="/media/tokenwald-sandbox-tutorial.mp4" style="color:var(--gold)">download the tutorial</a> instead.
+    </video>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:18px">
+    <button onClick="{{ goPg }}" style="border:none;background:#D9A94B;color:#0f1115;font-weight:700;font-size:14px;padding:12px 26px;border-radius:11px">Try it yourself — open the Sandbox →</button>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<div style="max-width:1100px;margin:0 auto;padding:70px 24px 10px">
+  <div style="font-size:11px;letter-spacing:1.2px;font-weight:700;color:var(--gold)">The problem</div>
+  <h2 style="font-family:'Fraunces';font-size:30px;font-weight:700;margin:10px 0 26px">Why digital gold hasn't worked</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:15px;padding:22px 24px"><div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:var(--gold)">01</div><div style="font-family:'Fraunces';font-weight:600;font-size:16px;margin-top:12px">Closed-cage "digital gold"</div><div style="font-size:13.5px;color:var(--t3);line-height:1.65;margin-top:8px">App-based gold can't leave the app. No self-custody, no portability, no on-chain proof — just a claim against a platform.</div></div>
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:15px;padding:22px 24px"><div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:var(--gold)">02</div><div style="font-family:'Fraunces';font-weight:600;font-size:16px;margin-top:12px">Too hard for a real dealer</div><div style="font-size:13.5px;color:var(--t3);line-height:1.65;margin-top:8px">A bullion dealer who wants to do it properly faces token engineering, KYC gating, MiCA filings, and oracle infrastructure. Nobody ships that alone.</div></div>
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:15px;padding:22px 24px"><div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:var(--gold)">03</div><div style="font-family:'Fraunces';font-weight:600;font-size:16px;margin-top:12px">No proof, no borders</div><div style="font-size:13.5px;color:var(--t3);line-height:1.65;margin-top:8px">No live proof-of-reserve, and a token that's compliant in Frankfurt is a legal question mark in Dubai. Trust stops at the border.</div></div>
+  </div>
+</div>
+
+<!-- ENGINE -->
+<div id="how" style="max-width:1100px;margin:0 auto;padding:70px 24px 10px">
+  <div style="font-size:11px;letter-spacing:1.2px;font-weight:700;color:var(--gold)">Architecture</div>
+  <h2 style="font-family:'Fraunces';font-size:30px;font-weight:700;margin:10px 0 6px">Four trust layers, one flow</h2>
+  <div style="font-size:14px;color:var(--t3);margin-bottom:28px">AI proposes → Human approves → Ledger enforces → Reserve verifies. The AI never enforces; the ledger never guesses.</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0;align-items:stretch">
+    <sc-for list="{{ engineLayers }}" as="e" hint-placeholder-count="4">
+      <div style="display:flex;align-items:stretch">
+        <div style="flex:1;background:var(--surface);border:1px solid {{ e.color }}44;border-radius:15px;padding:20px 20px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:0;left:0;right:0;height:2.5px;background:{{ e.color }};opacity:.8"></div>
+          <div style="display:flex;align-items:center;gap:9px"><div style="width:9px;height:9px;border-radius:50%;background:{{ e.color }};animation:twPulse 2.2s infinite;animation-delay:{{ e.delay }}"></div><span style="font-size:10px;letter-spacing:.8px;font-weight:700;color:{{ e.color }}">{{ e.verb }}</span></div>
+          <div style="font-family:'Fraunces';font-weight:600;font-size:15.5px;margin-top:10px">{{ e.title }}</div>
+          <div style="font-size:12.5px;color:var(--t3);line-height:1.6;margin-top:7px">{{ e.desc }}</div>
+          <div style="font-size:10px;font-family:'JetBrains Mono';color:{{ e.color }};margin-top:11px;opacity:.85">{{ e.prim }}</div>
+        </div>
+        <sc-if value="{{ e.arrow }}" hint-placeholder-val="{{ true }}">
+          <svg width="26" height="24" viewBox="0 0 26 24" style="align-self:center;flex:none"><line x1="2" y1="12" x2="20" y2="12" stroke="#5b6372" stroke-width="2" stroke-dasharray="4 4" style="animation:twFlow 1.2s linear infinite"></line><path d="M18 7 L24 12 L18 17" fill="none" stroke="#5b6372" stroke-width="2"></path></svg>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:16px;font-size:12px;color:#5b6372;text-align:center">All primitives are native XRPL: MPT · Dynamic NFT (XLS-46) · Permissioned Domains (XLS-80) · Credentials · Price Oracle (XLS-47) · RLUSD/XRP · Batch</div>
+</div>
+
+<!-- PRODUCT -->
+<div style="max-width:1100px;margin:0 auto;padding:70px 24px 10px">
+  <div style="font-size:11px;letter-spacing:1.2px;font-weight:700;color:var(--gold)">Platform</div>
+  <h2 style="font-family:'Fraunces';font-size:30px;font-weight:700;margin:10px 0 26px">What issuers get</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+    <sc-for list="{{ productItems }}" as="p" hint-placeholder-count="7">
+      <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:13px;padding:17px 18px;display:flex;gap:13px;align-items:flex-start">
+        <div style="flex:none;width:34px;height:34px;border-radius:9px;background:{{ p.color }}18;border:1px solid {{ p.color }}40;display:flex;align-items:center;justify-content:center;font-size:15px">{{ p.icon }}</div>
+        <div><div style="font-weight:600;font-size:14px">{{ p.title }}</div><div style="font-size:12px;color:var(--t3);line-height:1.55;margin-top:4px">{{ p.desc }}</div></div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- WHY WE WIN -->
+<div style="max-width:1100px;margin:0 auto;padding:70px 24px 10px">
+  <div style="font-size:11px;letter-spacing:1.2px;font-weight:700;color:var(--gold)">Comparison</div>
+  <h2 style="font-family:'Fraunces';font-size:30px;font-weight:700;margin:10px 0 26px">How TokenWald compares</h2>
+  <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:16px;overflow:auto">
+    <div style="display:grid;grid-template-columns:1.5fr repeat(4,1fr);min-width:760px">
+      <div style="padding:14px 18px;border-bottom:1px solid rgba(var(--line),.07)"></div>
+      <div style="padding:14px 10px;border-bottom:1px solid rgba(var(--line),.07);text-align:center;font-size:12px;font-weight:600;color:var(--t3)">Gold ETF</div>
+      <div style="padding:14px 10px;border-bottom:1px solid rgba(var(--line),.07);text-align:center;font-size:12px;font-weight:600;color:var(--t3)">App "digital gold"</div>
+      <div style="padding:14px 10px;border-bottom:1px solid rgba(var(--line),.07);text-align:center;font-size:12px;font-weight:600;color:var(--t3)">Gold stablecoin<br><span style="font-size:10px;color:#5b6372">PAXG / XAUT</span></div>
+      <div style="padding:14px 10px;border-bottom:1px solid rgba(var(--line),.07);text-align:center;font-size:12.5px;font-weight:700;color:var(--gold);background:rgba(217,169,75,.06)">TokenWald</div>
+      <sc-for list="{{ compareRows }}" as="row" hint-placeholder-count="6">
+        <div style="padding:12px 18px;border-bottom:1px solid rgba(var(--line),.05);font-size:13px;color:var(--t2)">{{ row.label }}</div>
+        <div style="padding:12px 10px;border-bottom:1px solid rgba(var(--line),.05);text-align:center;font-size:14px;color:{{ row.c1c }}">{{ row.c1 }}</div>
+        <div style="padding:12px 10px;border-bottom:1px solid rgba(var(--line),.05);text-align:center;font-size:14px;color:{{ row.c2c }}">{{ row.c2 }}</div>
+        <div style="padding:12px 10px;border-bottom:1px solid rgba(var(--line),.05);text-align:center;font-size:14px;color:{{ row.c3c }}">{{ row.c3 }}</div>
+        <div style="padding:12px 10px;border-bottom:1px solid rgba(var(--line),.05);text-align:center;font-size:14px;color:#34d399;background:rgba(217,169,75,.05);font-weight:700">✓</div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS (B2B) -->
+<div style="max-width:1100px;margin:0 auto;padding:70px 24px 10px">
+  <div style="font-size:11px;letter-spacing:1.2px;font-weight:700;color:var(--gold)">How it works</div>
+  <h2 style="font-family:'Fraunces';font-size:30px;font-weight:700;margin:10px 0 26px">From vault to verified token in three steps</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:15px;padding:22px 24px">
+      <div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:var(--gold)">01</div>
+      <div style="font-family:'Fraunces';font-weight:600;font-size:16px;margin-top:10px">Connect your vault</div>
+      <div style="font-size:13.5px;color:var(--t3);line-height:1.65;margin-top:8px">Your custodian's bar-list attestation feeds an on-ledger reserve oracle. Every token is provably backed before it exists — minting is blocked the moment coverage falls short.</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:15px;padding:22px 24px">
+      <div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:var(--gold)">02</div>
+      <div style="font-family:'Fraunces';font-weight:600;font-size:16px;margin-top:10px">Configure compliance</div>
+      <div style="font-size:13.5px;color:var(--t3);line-height:1.65;margin-top:8px">Pick your jurisdictions; the compliance copilot drafts the profile and paperwork, you approve, and eligibility becomes an on-ledger rule — enforced by the ledger, not by policy documents.</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:15px;padding:22px 24px">
+      <div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:var(--gold)">03</div>
+      <div style="font-family:'Fraunces';font-weight:600;font-size:16px;margin-top:10px">Issue &amp; monitor</div>
+      <div style="font-size:13.5px;color:var(--t3);line-height:1.65;margin-top:8px">Mint redeemable metal tokens to verified buyers, watch reserve coverage and holders in real time, and let the live compliance record travel with the asset across borders.</div>
+    </div>
+  </div>
+  <div style="margin-top:22px;background:var(--surface2);border:1px solid rgba(var(--line),.09);border-radius:14px;padding:18px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:260px">
+      <div style="font-family:'Fraunces';font-weight:600;font-size:15.5px">Built for issuers. Free for their buyers.</div>
+      <div style="font-size:13px;color:var(--t3);margin-top:4px">Pricing is tailored to issuance volume and jurisdictions — let's scope it together.</div>
+    </div>
+    <a href="mailto:tokenwald@gmail.com?subject=TokenWald%20—%20talk%20to%20us" style="text-decoration:none;border:none;background:#D9A94B;color:#0f1115;font-weight:700;font-size:14px;padding:12px 26px;border-radius:11px;display:inline-block">Talk to us</a>
+    <button onClick="{{ goPg }}" style="border:1px solid rgba(var(--line),.16);background:transparent;color:var(--text);font-weight:600;font-size:14px;padding:12px 22px;border-radius:11px">Try the Sandbox</button>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div style="max-width:1100px;margin:0 auto;padding:70px 24px 10px">
+  <div style="font-size:11px;letter-spacing:1.2px;font-weight:700;color:var(--gold)">Roadmap</div>
+  <h2 style="font-family:'Fraunces';font-size:30px;font-weight:700;margin:10px 0 6px">Starting with gold</h2>
+  <div style="font-size:14px;color:var(--t3);margin-bottom:30px">One compliance-aware, proof-of-reserve-backed engine — re-parameterized per commodity. Never becoming a financial institution.</div>
+  <div style="position:relative">
+    <div style="position:absolute;left:0;right:0;top:19px;height:2px;background:linear-gradient(90deg,#D9A94B 0%,#D9A94B55 40%,rgba(var(--line),.1) 100%)"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;position:relative">
+      <sc-for list="{{ roadmap }}" as="ph" hint-placeholder-count="4">
+        <div style="animation:twFadeUp .5s ease both;animation-delay:{{ ph.delay }}">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+            <div style="width:38px;height:38px;border-radius:50%;background:{{ ph.dotBg }};border:2px solid {{ ph.dotBorder }};display:flex;align-items:center;justify-content:center;font-size:16px;position:relative;z-index:1">{{ ph.icon }}</div>
+            <sc-if value="{{ ph.now }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:9.5px;letter-spacing:.6px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(52,211,153,.15);color:#34d399;animation:twBlink 2s infinite">● NOW — LIVE ON XRPL TESTNET</span>
+            </sc-if>
+          </div>
+          <div style="background:{{ ph.cardBg }};border:1px solid {{ ph.cardBorder }};border-radius:14px;padding:17px 18px;min-height:210px">
+            <div style="font-size:10px;letter-spacing:.8px;font-weight:700;color:{{ ph.accent }}">PHASE {{ ph.n }}</div>
+            <div style="font-family:'Fraunces';font-weight:700;font-size:17px;margin-top:6px">{{ ph.title }}</div>
+            <div style="font-size:12px;color:var(--t3);line-height:1.55;margin-top:7px">{{ ph.desc }}</div>
+            <div style="margin-top:12px;font-size:10px;letter-spacing:.6px;font-weight:700;color:var(--t3)">WHAT CHANGES</div>
+            <div style="font-size:11.5px;color:var(--t2);line-height:1.6;margin-top:4px">{{ ph.changes }}</div>
+            <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:6px;background:rgba(var(--line),.05);border:1px solid rgba(var(--line),.09)"><span style="font-size:10px;color:var(--t3)">WHAT STAYS:</span><span style="font-size:10px;font-weight:700;color:var(--gold)">THE 4-LAYER ENGINE</span></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<!-- TECHNOLOGY STRIP -->
+<div style="max-width:1100px;margin:0 auto;padding:64px 24px 10px;text-align:center">
+  <div style="font-size:11px;letter-spacing:1.6px;font-weight:600;color:var(--t4);text-transform:uppercase;margin-bottom:26px">Built with</div>
+  <div style="display:flex;gap:56px;justify-content:center;align-items:center;flex-wrap:wrap">
+    <div style="text-align:center">
+      <div style="font-family:'Inter';font-weight:700;font-size:22px;letter-spacing:.5px;color:var(--t2)">XRPL</div>
+      <div style="font-size:10.5px;color:var(--t4);margin-top:4px">The XRP Ledger</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-family:'Inter';font-weight:700;font-size:22px;letter-spacing:.3px;color:var(--t2)">Vaultody</div>
+      <div style="font-size:10.5px;color:var(--t4);margin-top:4px">Digital asset custody</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-family:'Inter';font-weight:700;font-size:22px;letter-spacing:.5px;color:var(--t2)">RLUSD</div>
+      <div style="font-size:10.5px;color:var(--t4);margin-top:4px">Regulated settlement</div>
+    </div>
+  </div>
+</div>
+
+<!-- LAUNCH / EMAIL LIST -->
+<div style="max-width:1100px;margin:0 auto;padding:80px 24px 90px;text-align:center">
+  <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid rgba(52,211,153,.4);border-radius:999px;font-size:12px;color:#34d399;font-weight:600;letter-spacing:.4px;margin-bottom:18px"><span style="width:7px;height:7px;border-radius:50%;background:#34d399;animation:twPulse 2s infinite"></span> We are launching soon</div>
+  <h2 style="font-family:'Fraunces';font-size:34px;font-weight:700;margin:0">Be first when we go live.</h2>
+  <div style="font-size:15px;color:var(--t3);margin-top:12px">Join the email list for early access and launch updates.</div>
+  <div style="display:flex;gap:10px;justify-content:center;margin-top:28px;flex-wrap:wrap">
+    <input value="{{ waitEmail }}" onInput="{{ setWaitEmail }}" placeholder="you@company.com" type="email" style="background:var(--surface2);border:1px solid rgba(var(--line),.16);border-radius:12px;padding:14px 18px;color:var(--text);font-size:14.5px;font-family:inherit;width:min(320px,80vw)">
+    <button onClick="{{ joinWaitlist }}" style="border:none;background:#D9A94B;color:#0f1115;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px">Join the email list</button>
+  </div>
+  <div style="font-size:12px;color:var(--t4);margin-top:16px">Or write to us directly: <a href="mailto:tokenwald@gmail.com" style="color:var(--gold);text-decoration:none">tokenwald@gmail.com</a></div>
+</div>
+
+<!-- SITE FOOTER -->
+<div style="border-top:1px solid rgba(var(--line),.07)">
+  <div style="max-width:1100px;margin:0 auto;padding:38px 24px 30px">
+    <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:1;min-width:240px">
+        <div style="font-family:'Fraunces';font-weight:700;font-size:17px;letter-spacing:-.3px">Token<span style="color:var(--gold)">Wald</span></div>
+        <div style="font-size:12.5px;color:var(--t4);line-height:1.6;margin-top:8px;max-width:340px">Tokenization-as-a-service for precious metals. Non-custodial infrastructure on the XRP Ledger.</div>
+      </div>
+      <div style="min-width:140px">
+        <div style="font-size:10.5px;letter-spacing:.9px;font-weight:700;color:var(--t4);text-transform:uppercase;margin-bottom:10px">Product</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;align-items:flex-start">
+          <button onClick="{{ goPg }}" style="border:none;background:none;padding:0;color:var(--t3);cursor:pointer;font-size:13px;font-family:inherit">Tokenization Sandbox</button>
+          <button onClick="{{ goAdvisor }}" style="border:none;background:none;padding:0;color:var(--t3);cursor:pointer;font-size:13px;font-family:inherit">Tokenization Advisor</button>
+          <button onClick="{{ goCopilot }}" style="border:none;background:none;padding:0;color:var(--t3);cursor:pointer;font-size:13px;font-family:inherit">Jurisdiction Copilot</button>
+          <a href="/docs.html" target="_blank" style="color:var(--t3);text-decoration:none">Documentation</a>
+        </div>
+      </div>
+      <div style="min-width:140px">
+        <div style="font-size:10.5px;letter-spacing:.9px;font-weight:700;color:var(--t4);text-transform:uppercase;margin-bottom:10px">Company</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:13px">
+          <a href="mailto:tokenwald@gmail.com" style="color:var(--t3);text-decoration:none">Contact us</a>
+          <a href="https://testnet.xrpl.org" target="_blank" style="color:var(--t3);text-decoration:none">XRPL Testnet explorer</a>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:28px;padding-top:18px;border-top:1px solid rgba(var(--line),.06);display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div style="font-size:11.5px;color:var(--t4)">© 2026 TokenWald · Luxembourg</div>
+      <div style="font-size:11px;color:var(--t4);max-width:640px;line-height:1.55">Prototype running on the XRP Ledger Testnet. Nothing on this page is an offer of financial services, an invitation to invest, or investment advice. TokenWald is non-custodial software — it never holds assets, keys, or client funds.</div>
+    </div>
+  </div>
+</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPg }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Playground">
+      <div style="max-width:1460px;margin:0 auto;padding:26px 24px 60px">
+
+  <!-- header -->
+  <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <h1 style="font-family:'Fraunces';font-size:26px;font-weight:700;margin:0">Dealer Console</h1>
+        <span style="font-size:10.5px;letter-spacing:.8px;font-weight:600;color:{{ liveBadgeColor }};border:1px solid {{ liveBadgeBorder }};padding:4px 9px;border-radius:6px">{{ liveBadge }}</span>
+      </div>
+      <div style="font-size:13.5px;color:var(--t3);margin-top:6px">{{ liveSubtitle }}</div>
+    </div>
+    <div style="flex:1"></div>
+    <a href="https://testnet.xrpl.org" target="_blank" style="border:1px solid rgba(79,142,247,.35);background:transparent;color:#4f8ef7;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:9px;text-decoration:none">testnet.xrpl.org ↗</a>
+    <button onClick="{{ restartPg }}" style="border:1px solid rgba(var(--line),.14);background:transparent;color:var(--t3);font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:9px">↺ Restart run</button>
+  </div>
+
+  <sc-if value="{{ seedBanner }}" hint-placeholder-val="{{ false }}">
+    <div style="margin:10px 0 0;padding:10px 14px;border-radius:10px;background:rgba(217,169,75,.08);border:1px solid rgba(217,169,75,.3);font-size:13px;color:var(--gold)">◈ {{ seedBanner }}</div>
+  </sc-if>
+
+  <!-- reserve strip -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0 22px">
+    <div style="background:var(--surface);border:1px solid rgba(52,211,153,.25);border-radius:13px;padding:14px 16px">
+      <div style="font-size:11px;letter-spacing:.6px;color:#34d399;font-weight:600;margin-bottom:6px">GRAMS IN VAULT · ORACLE</div>
+      <div style="font-family:'Fraunces';font-size:22px;font-weight:700">{{ pgVaultStr }} g</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid rgba(217,169,75,.25);border-radius:13px;padding:14px 16px">
+      <div style="font-size:11px;letter-spacing:.6px;color:var(--gold);font-weight:600;margin-bottom:6px">TWG MINTED</div>
+      <div style="font-family:'Fraunces';font-size:22px;font-weight:700">{{ pgMintedStr }} g</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:13px;padding:14px 16px;grid-column:span 2">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;letter-spacing:.6px;color:var(--t3);font-weight:600">RESERVE COVERAGE (1:1 REQUIRED)</span>
+        <span style="font-family:'JetBrains Mono';font-size:13px;font-weight:600;color:{{ covColor }}">{{ covPctStr }}</span>
+      </div>
+      <div style="height:10px;border-radius:6px;background:var(--bg);overflow:hidden;position:relative">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:{{ covBarW }};background:{{ covColor }};border-radius:6px;transition:width .8s ease"></div>
+        <div style="position:absolute;left:calc(100% * 0.62);top:0;bottom:0;width:1.5px;background:rgba(var(--line),.25)"></div>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:9px;flex-wrap:wrap">
+        <sc-for list="{{ pgHoldings }}" as="h" hint-placeholder-count="4">
+          <span style="font-size:11.5px;color:var(--t3)">{{ h.name }} <b style="color:var(--text);font-family:'JetBrains Mono'">{{ h.v }}</b></span>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start">
+
+    <!-- LEFT: steps -->
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ pgSteps }}" as="s" hint-placeholder-count="8">
+        <div style="background:{{ s.cardBg }};border:1px solid {{ s.cardBorder }};border-radius:14px;padding:16px 18px;opacity:{{ s.opacity }};transition:all .25s">
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="flex:none;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces';font-weight:700;font-size:14px;background:{{ s.numBg }};color:{{ s.numColor }};border:1px solid {{ s.numBorder }}">{{ s.icon }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+                <span style="font-family:'Fraunces';font-weight:600;font-size:15.5px">{{ s.title }}</span>
+                <span style="font-size:10px;letter-spacing:.5px;font-weight:700;padding:3px 8px;border-radius:5px;background:{{ s.layerBg }};color:{{ s.layerColor }}">{{ s.layerName }}</span>
+                <span style="font-size:10px;letter-spacing:.4px;font-weight:600;padding:3px 8px;border-radius:5px;border:1px solid rgba(var(--line),.13);color:var(--t3);font-family:'JetBrains Mono'">{{ s.primitive }}</span>
+                <span style="font-size:9.5px;letter-spacing:.5px;font-weight:700;padding:3px 7px;border-radius:5px;background:{{ s.realBg }};color:{{ s.realColor }}">{{ s.realTag }}</span>
+              </div>
+              <div style="font-size:13px;color:var(--t3);line-height:1.55;margin-top:6px">{{ s.desc }}</div>
+              <sc-if value="{{ s.isActive }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ s.run }}" disabled="{{ s.busy }}" style="margin-top:12px;border:none;background:linear-gradient(135deg,#D9A94B,#C09540);color:#0f1115;font-weight:700;font-size:13px;padding:9px 18px;border-radius:9px;animation:twGlow 2.4s infinite;opacity:{{ s.btnOpacity }}">{{ s.btnLabel }}</button>
+              </sc-if>
+            </div>
+            <div style="flex:none;font-size:17px;margin-top:2px">{{ s.check }}</div>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ pgAllDone }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.07);border-radius:14px;padding:18px 20px;text-align:center">
+          <div style="font-family:'Fraunces';font-weight:700;font-size:17px;color:#34d399">Full lifecycle complete ✓</div>
+          <div style="font-size:13px;color:var(--t3);margin-top:6px">Mint → gate → automate → cross borders. One engine, four trust layers, zero custody.</div>
+          <button onClick="{{ goDash }}" style="margin-top:12px;border:1px solid rgba(52,211,153,.4);background:transparent;color:#34d399;font-weight:600;font-size:13px;padding:9px 18px;border-radius:9px">See it on the Dashboards →</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- RIGHT RAIL -->
+    <div style="position:sticky;top:74px;display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 92px)">
+      <div style="background:var(--surface);border:1px solid rgba(217,169,75,.28);border-radius:14px;overflow:hidden;flex:none">
+        <div style="display:flex;align-items:center;gap:9px;padding:11px 15px;border-bottom:1px solid rgba(var(--line),.07);background:rgba(217,169,75,.05)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#D9A94B;animation:twPulse 2s infinite"></div>
+          <span style="font-family:'Fraunces';font-weight:600;font-size:13.5px;color:var(--gold)">Live Token · compliance dNFT</span>
+          <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:1px solid rgba(var(--line),.13);color:var(--t3);font-family:'JetBrains Mono'">XLS-46</span>
+          <div style="flex:1"></div>
+          <span style="font-family:'JetBrains Mono';font-size:12px;color:var(--gold);font-weight:600">{{ dnftV }}</span>
+        </div>
+        <pre style="margin:0;padding:13px 15px;font-family:'JetBrains Mono';font-size:11px;line-height:1.6;color:var(--t2);white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto">{{ dnftJson }}</pre>
+      </div>
+      <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0">
+        <div style="padding:11px 15px;border-bottom:1px solid rgba(var(--line),.07);font-family:'Fraunces';font-weight:600;font-size:13.5px;color:var(--text)">Ledger + audit trail</div>
+        <div style="overflow:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px;min-height:120px">
+          <sc-if value="{{ pgEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:26px 14px;text-align:center;color:#5b6372;font-size:12.5px">No transactions yet.<br>Run step a to begin the lifecycle.</div>
+          </sc-if>
+          <sc-for list="{{ pgLedger }}" as="tx" hint-placeholder-count="0">
+            <div style="animation:twFadeUp .3s ease;border-left:3px solid {{ tx.layerColor }};background:var(--raised);border-radius:0 9px 9px 0;padding:8px 11px">
+              <div style="display:flex;gap:8px;align-items:center">
+                <a href="{{ tx.explorerUrl }}" target="_blank" style="font-family:'JetBrains Mono';font-size:10px;color:{{ tx.hashColor }};text-decoration:{{ tx.hashDeco }}">{{ tx.hashLabel }}</a>
+                <div style="flex:1"></div>
+                <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;color:{{ tx.resColor }}">{{ tx.result }}</span>
+              </div>
+              <div style="font-size:12px;color:var(--t2);margin-top:3px;line-height:1.45">{{ tx.desc }}</div>
+              <div style="display:flex;gap:7px;margin-top:4px;align-items:center">
+                <span style="font-size:9.5px;font-family:'JetBrains Mono';color:{{ tx.layerColor }}">{{ tx.primitive }}</span>
+                <span style="font-size:9.5px;color:#5b6372">{{ tx.ts }}</span>
+                <span style="font-size:9px;font-weight:700;letter-spacing:.4px;color:{{ tx.realColor }}">{{ tx.realTag }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCopilot }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Jurisdiction Copilot">
+      <div style="max-width:1460px;margin:0 auto;padding:26px 24px 60px">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1 style="font-family:'Fraunces';font-size:26px;font-weight:700;margin:0">Jurisdiction Compliance Copilot</h1>
+    <span style="font-size:10px;letter-spacing:.5px;font-weight:700;padding:4px 9px;border-radius:6px;background:rgba(167,139,250,.14);color:#a78bfa">AI PROPOSES</span>
+    <span style="font-size:10px;letter-spacing:.5px;font-weight:700;padding:4px 9px;border-radius:6px;border:1px solid rgba(var(--line),.12);color:var(--t3)">HUMAN APPROVES · LEDGER ENFORCES</span>
+  </div>
+  <div style="font-size:13.5px;color:var(--t3);margin-top:6px;max-width:760px">Feed in a jurisdiction's regulation. The copilot drafts a structured compliance profile and shows how your Live-Token state and domain rules would change. Nothing is enforced until you apply it.</div>
+
+  <div style="display:grid;grid-template-columns:390px minmax(0,1fr);gap:18px;margin-top:20px;align-items:start">
+
+    <!-- LEFT: input -->
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;padding:16px 17px">
+        <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3);margin-bottom:10px">1 · JURISDICTION</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <sc-for list="{{ cpPresets }}" as="p" hint-placeholder-count="3">
+            <button onClick="{{ p.pick }}" style="border:1px solid {{ p.border }};background:{{ p.bg }};color:{{ p.color }};font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:9px">{{ p.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;padding:16px 17px">
+        <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3);margin-bottom:10px">2 · REGULATION TEXT</div>
+        <label style="display:block;border:1px dashed rgba(var(--line),.18);border-radius:10px;padding:14px;text-align:center;cursor:pointer;color:var(--t3);font-size:12.5px">
+          <input type="file" accept=".pdf,.txt,.md,.json" onChange="{{ cpFile }}" style="display:none">
+          ⬆ Upload PDF / TXT {{ cpFileName }}
+        </label>
+        <textarea value="{{ cpText }}" onChange="{{ cpSetText }}" placeholder="…or paste the regulation / article text here" style="width:100%;height:170px;margin-top:10px;background:var(--bg);border:1px solid rgba(var(--line),.12);color:var(--t2);font-size:12px;line-height:1.6;padding:11px 12px;border-radius:10px;resize:vertical;font-family:'JetBrains Mono'"></textarea>
+        <button onClick="{{ cpAnalyze }}" disabled="{{ cpAnalyzing }}" style="width:100%;margin-top:11px;border:none;background:linear-gradient(135deg,#a78bfa,#7c5ce0);color:#0f1115;font-weight:700;font-size:13.5px;padding:11px;border-radius:10px;opacity:{{ cpBtnOp }}">{{ cpBtnLabel }}</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid rgba(var(--line),.07);border-radius:11px;background:var(--surface2);font-size:11.5px;color:#5b6372;line-height:1.55">💡 The copilot only <b style="color:#a78bfa">proposes</b>. Enforcement happens exclusively through the permissioned domain and the Live Token — after your approval.</div>
+    </div>
+
+    <!-- RIGHT: output -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <sc-if value="{{ cpAnalyzing }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--surface);border:1px solid rgba(167,139,250,.3);border-radius:14px;padding:40px;text-align:center">
+          <div style="width:34px;height:34px;border:3px solid rgba(167,139,250,.25);border-top-color:#a78bfa;border-radius:50%;animation:twSpin 1s linear infinite;margin:0 auto"></div>
+          <div style="font-size:13px;color:#a78bfa;margin-top:14px;font-weight:600">Reading the regulation… mapping to token controls…</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ cpIdle }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1px dashed rgba(var(--line),.13);border-radius:14px;padding:22px 24px;text-align:center;color:#5b6372;font-size:12.5px">Paste regulation text on the left and run the analysis — the structured profile, diff, and drafted paperwork appear here. Or brainstorm a country's rules in the chat below.</div>
+      </sc-if>
+      <sc-if value="{{ cpHasProfile }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="background:var(--surface);border:1px solid rgba(167,139,250,.28);border-radius:14px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid rgba(var(--line),.07);background:rgba(167,139,250,.06)">
+              <span style="font-family:'Fraunces';font-weight:600;font-size:14px;color:#c4b5fd">Structured compliance profile</span>
+              <div style="flex:1"></div>
+              <span style="font-size:10px;font-weight:600;color:var(--t3)">{{ cpSource }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(var(--line),.05)">
+              <sc-for list="{{ cpRows }}" as="row" hint-placeholder-count="10">
+                <div style="background:var(--surface);padding:11px 16px">
+                  <div style="font-size:10px;letter-spacing:.6px;font-weight:700;color:#a78bfa">{{ row.label }}</div>
+                  <div style="font-size:12.5px;color:var(--t2);line-height:1.55;margin-top:4px">{{ row.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:var(--surface);border:1px solid rgba(217,169,75,.25);border-radius:14px;overflow:hidden">
+            <div style="padding:12px 16px;border-bottom:1px solid rgba(var(--line),.07);background:rgba(217,169,75,.05);font-family:'Fraunces';font-weight:600;font-size:14px;color:var(--gold)">Diff — how your Live-Token state &amp; domain rules will change</div>
+            <div style="padding:8px 16px 14px">
+              <sc-for list="{{ cpDiff }}" as="d" hint-placeholder-count="5">
+                <div style="padding:9px 0;border-bottom:1px solid rgba(var(--line),.05)">
+                  <div style="font-size:10.5px;letter-spacing:.5px;font-weight:700;color:var(--t3)">{{ d.field }}</div>
+                  <div style="display:grid;grid-template-columns:1fr 22px 1fr;gap:8px;margin-top:5px;align-items:start">
+                    <div style="font-size:12px;color:#f87171;background:rgba(248,113,113,.06);border-radius:7px;padding:7px 10px;line-height:1.5">− {{ d.from }}</div>
+                    <div style="color:#5b6372;text-align:center;padding-top:6px">→</div>
+                    <div style="font-size:12px;color:#34d399;background:rgba(52,211,153,.06);border-radius:7px;padding:7px 10px;line-height:1.5">+ {{ d.to }}</div>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:13px">
+                <button onClick="{{ cpApply }}" disabled="{{ cpApplied }}" style="border:none;background:{{ cpApplyBg }};color:#0f1115;font-weight:700;font-size:13.5px;padding:10px 22px;border-radius:10px">{{ cpApplyLabel }}</button>
+                <span style="font-size:11.5px;color:#5b6372">Applies to shared app state → Sandbox step h + Dashboard alerts pick it up instantly.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid rgba(var(--line),.07)">
+              <sc-for list="{{ cpDocs }}" as="doc" hint-placeholder-count="3">
+                <button onClick="{{ doc.pick }}" style="border:none;background:{{ doc.bg }};color:{{ doc.color }};font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px">{{ doc.title }}</button>
+              </sc-for>
+              <div style="flex:1"></div>
+              <button onClick="{{ cpSend }}" style="border:1px solid rgba(167,139,250,.4);background:{{ cpSendBg }};color:#a78bfa;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px">{{ cpSendLabel }}</button>
+            </div>
+            <div style="padding:16px 20px;font-size:12.5px;line-height:1.8;color:var(--t2)">
+              <div style="font-family:'Fraunces';font-weight:700;font-size:15px;color:var(--text);margin-bottom:8px">{{ cpDocTitle }}</div>
+              <sc-for list="{{ cpDocLines }}" as="ln" hint-placeholder-count="6">
+                <div style="display:flex;gap:9px"><span style="color:#a78bfa;flex:none">{{ ln.b }}</span><span>{{ ln.t }}</span></div>
+              </sc-for>
+              <div style="margin-top:12px;font-size:10.5px;color:#5b6372;border-top:1px solid rgba(var(--line),.06);padding-top:9px">AI-drafted · requires dealer/lawyer sign-off before filing. Drafts never enforce anything.</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Brainstorm chat: ask Claude Sonnet 5 about a country's tokenization laws -->
+      <div style="background:var(--surface);border:1px solid rgba(167,139,250,.28);border-radius:14px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid rgba(var(--line),.07);background:rgba(167,139,250,.06);flex-wrap:wrap">
+          <span style="font-family:'Fraunces';font-weight:600;font-size:14px;color:#c4b5fd">Brainstorm a country's tokenization laws</span>
+          <span style="font-size:10px;letter-spacing:.5px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(167,139,250,.14);color:#a78bfa">CLAUDE SONNET 5</span>
+          <div style="flex:1"></div>
+          <span style="font-size:10.5px;color:#5b6372">Research aid · not legal advice</span>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--t3);white-space:nowrap">Country</span>
+            <input value="{{ cpChatCountry }}" onChange="{{ cpChatSetCountry }}" placeholder="e.g. Germany, Singapore, UAE…" style="width:230px;background:var(--bg);border:1px solid rgba(var(--line),.13);color:var(--text);font-size:12.5px;padding:8px 11px;border-radius:9px">
+          </div>
+
+          <sc-if value="{{ cpChatEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="border:1px dashed rgba(var(--line),.13);border-radius:11px;padding:26px 20px;text-align:center;color:#5b6372;font-size:12.5px">Enter a country, then ask about its tokenization / digital-asset laws, KYC/AML duties, licensing triggers, custody, or cross-border recognition.</div>
+          </sc-if>
+
+          <sc-if value="{{ cpChatHasMsgs }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px;max-height:440px;overflow-y:auto;padding:2px 2px 6px">
+              <sc-for list="{{ cpChatMsgs }}" as="m" hint-placeholder-count="4">
+                <div style="align-self:{{ m.align }};max-width:82%;background:{{ m.bg }};border:1px solid {{ m.border }};color:{{ m.color }};font-size:12.5px;line-height:1.6;padding:10px 13px;border-radius:12px;white-space:pre-wrap">{{ m.text }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ cpChatBusy }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:12px;color:#a78bfa;margin-top:8px">Claude Sonnet 5 is thinking…</div>
+          </sc-if>
+
+          <div style="display:flex;gap:9px;margin-top:12px">
+            <textarea value="{{ cpChatInput }}" onChange="{{ cpChatSetInput }}" onKeyDown="{{ cpChatKey }}" placeholder="Ask about this country's rules for tokenizing gold, stablecoins, KYC, licensing…  (Enter to send, Shift+Enter for newline)" style="flex:1;height:62px;background:var(--bg);border:1px solid rgba(var(--line),.12);color:var(--t2);font-size:12.5px;line-height:1.5;padding:10px 12px;border-radius:10px;resize:vertical;font-family:inherit"></textarea>
+            <button onClick="{{ cpChatSend }}" disabled="{{ cpChatBusy }}" style="flex:none;border:none;background:linear-gradient(135deg,#a78bfa,#7c5ce0);color:#0f1115;font-weight:700;font-size:13px;padding:0 22px;border-radius:10px;opacity:{{ cpChatBtnOp }}">{{ cpChatBtnLabel }}</button>
+          </div>
+          <div style="margin-top:9px;font-size:10.5px;color:#5b6372">General research to brainstorm with — confirm anything material with local counsel before relying on it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAdvisor }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Tokenization Advisor">
+      <div style="max-width:1460px;margin:0 auto;padding:26px 24px 60px">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1 style="font-family:'Fraunces';font-size:26px;font-weight:700;margin:0">Tokenization Advisor</h1>
+    <span style="font-size:10px;letter-spacing:.5px;font-weight:700;padding:4px 9px;border-radius:6px;background:rgba(167,139,250,.14);color:#a78bfa">{{ advModeBadge }}</span>
+  </div>
+  <div style="font-size:13.5px;color:var(--t3);margin-top:6px;max-width:760px">How much should you tokenize — and how should you phase it? Start from the live estimate, then let Claude Sonnet 5 model a tailored plan — cards, cap gauge and projection update to its recommendation. Always under the MiCA €5M exemption cap.</div>
+
+  <div style="display:grid;grid-template-columns:390px minmax(0,1fr);gap:18px;margin-top:20px;align-items:start">
+
+    <!-- form -->
+    <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;padding:18px 19px;position:sticky;top:74px">
+      <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3);margin-bottom:14px">YOUR OPERATION TODAY</div>
+      <sc-for list="{{ advFields }}" as="f" hint-placeholder-count="4">
+        <div style="margin-bottom:13px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:6px"><span>{{ f.label }}</span><span style="color:#5b6372;font-size:11px">{{ f.hint }}</span></div>
+          <input type="number" value="{{ f.value }}" onChange="{{ f.set }}" style="width:100%;background:var(--bg);border:1px solid rgba(var(--line),.13);color:var(--text);font-size:13.5px;padding:9px 11px;border-radius:9px;font-family:'JetBrains Mono'">
+        </div>
+      </sc-for>
+      <div style="margin-bottom:13px">
+        <div style="font-size:12px;color:var(--t2);margin-bottom:7px">Target buyer jurisdictions</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <sc-for list="{{ advJurs }}" as="jj" hint-placeholder-count="4">
+            <button onClick="{{ jj.toggle }}" style="border:1px solid {{ jj.border }};background:{{ jj.bg }};color:{{ jj.color }};font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px">{{ jj.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:7px">Risk appetite</div>
+        <div style="display:flex;background:var(--bg);border:1px solid rgba(var(--line),.11);border-radius:10px;padding:3px;gap:3px">
+          <sc-for list="{{ advRisks }}" as="r" hint-placeholder-count="3">
+            <button onClick="{{ r.pick }}" style="flex:1;border:none;background:{{ r.bg }};color:{{ r.color }};font-size:12px;font-weight:600;padding:8px 4px;border-radius:8px">{{ r.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <button onClick="{{ advGen }}" style="width:100%;margin-top:18px;border:none;background:linear-gradient(135deg,#D9A94B,#C09540);color:#0f1115;font-weight:700;font-size:14px;padding:12px;border-radius:11px">⚡ Generate compliance-ready plan → Sandbox</button>
+      <div style="font-size:10.5px;color:#5b6372;margin-top:9px;line-height:1.5;text-align:center">Seeds the Sandbox with your Tranche-1 mint and queues the Copilot for your jurisdictions.</div>
+    </div>
+
+    <!-- outputs -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button onClick="{{ advGenAI }}" disabled="{{ advAiBusy }}" style="border:1px solid rgba(167,139,250,.4);background:linear-gradient(135deg,#a78bfa,#7c5ce0);color:#0f1115;font-weight:700;font-size:13px;padding:10px 18px;border-radius:10px;opacity:{{ advAiBtnOp }}">{{ advAiBtnLabel }}</button>
+        <sc-if value="{{ advIsAI }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:11px;font-weight:600;color:#a78bfa;display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#a78bfa;display:inline-block"></span>Live output from Claude Sonnet 5</span>
+        </sc-if>
+        <sc-if value="{{ advAiBusy }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:11.5px;color:#a78bfa">Modeling…</span>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ advHasRationale }}" hint-placeholder-val="{{ false }}">
+        <div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.28);border-radius:14px;padding:15px 18px">
+          <div style="font-size:10.5px;letter-spacing:.7px;font-weight:700;color:#a78bfa;margin-bottom:7px">✦ CLAUDE'S RATIONALE</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.65">{{ advRationale }}</div>
+        </div>
+      </sc-if>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+        <div style="background:linear-gradient(135deg,var(--goldwash),var(--surface) 60%);border:1px solid rgba(217,169,75,.35);border-radius:14px;padding:17px 18px">
+          <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--gold)">RECOMMENDED INITIAL TOKENIZATION</div>
+          <div style="font-family:'Fraunces';font-size:30px;font-weight:700;margin-top:8px;color:var(--gold)">{{ advRecG }} g</div>
+          <div style="font-size:12.5px;color:var(--t3);margin-top:3px">≈ {{ advRecEUR }} notional at spot</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(52,211,153,.25);border-radius:14px;padding:17px 18px">
+          <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:#34d399">PROOF-OF-RESERVE REQUIRED</div>
+          <div style="font-family:'Fraunces';font-size:30px;font-weight:700;margin-top:8px">{{ advCoverG }} g</div>
+          <div style="font-size:12.5px;color:var(--t3);margin-top:3px">≥100% vaulted before any mint</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(167,139,250,.25);border-radius:14px;padding:17px 18px">
+          <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:#a78bfa">PROJECTED SAAS TIER</div>
+          <div style="font-family:'Fraunces';font-size:30px;font-weight:700;margin-top:8px">{{ advTier }}</div>
+          <div style="font-size:12.5px;color:var(--t3);margin-top:3px">{{ advTierFee }} + ≈{{ advBps }} / yr in 25 bps fees</div>
+        </div>
+      </div>
+
+      <!-- cap gauge -->
+      <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;padding:16px 18px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:9px;flex-wrap:wrap;gap:6px">
+          <span style="font-family:'Fraunces';font-weight:600;font-size:14px">MiCA Art. 16(2) exemption cap — €5,000,000</span>
+          <span style="font-family:'JetBrains Mono';font-size:13px;font-weight:600;color:{{ advCapColor }}">{{ advCapPct }} used · {{ advHeadroom }} headroom</span>
+        </div>
+        <div style="height:14px;border-radius:8px;background:var(--bg);overflow:hidden;position:relative">
+          <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 82%,rgba(248,113,113,.18) 92%)"></div>
+          <div style="position:absolute;left:0;top:0;bottom:0;width:{{ advCapW }};background:linear-gradient(90deg,#34d399,{{ advCapColor }});border-radius:8px;transition:width .6s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#5b6372;margin-top:6px"><span>€0</span><span>stay under the cap → no full ART authorization needed</span><span>€5M</span></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <!-- tranches -->
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;padding:16px 18px">
+          <div style="font-family:'Fraunces';font-weight:600;font-size:14px;margin-bottom:12px">Phased tranche schedule</div>
+          <sc-for list="{{ advTranches }}" as="t" hint-placeholder-count="3">
+            <div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(var(--line),.05)">
+              <div style="flex:none;width:52px;font-size:10.5px;font-weight:700;color:var(--gold);font-family:'JetBrains Mono'">{{ t.when }}</div>
+              <div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">{{ t.name }}</div><div style="font-size:11.5px;color:var(--t3);margin-top:2px">{{ t.gStr }} g · {{ t.eStr }}</div></div>
+              <div style="flex:none;width:84px;height:7px;border-radius:4px;background:var(--bg);overflow:hidden"><div style="height:100%;width:{{ t.barW }};background:#D9A94B;border-radius:4px"></div></div>
+            </div>
+          </sc-for>
+          <div style="font-size:11px;color:#5b6372;margin-top:10px;line-height:1.5">Each tranche re-checks reserve coverage and cap headroom before mint — enforced, not advised.</div>
+        </div>
+        <!-- fan chart -->
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:14px;padding:16px 18px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span style="font-family:'Fraunces';font-weight:600;font-size:14px">12-month tokenized volume — projection</span><span style="font-size:9.5px;font-weight:700;color:#a78bfa;border:1px solid rgba(167,139,250,.3);padding:2px 6px;border-radius:4px">{{ advSimsBadge }}</span></div>
+          <svg viewBox="0 0 340 130" style="width:100%;height:auto;display:block">
+            <path d="{{ advBand }}" fill="rgba(217,169,75,.11)"></path>
+            <path d="{{ advP50Line }}" fill="none" stroke="#D9A94B" stroke-width="2"></path>
+            <path d="{{ advP10Line }}" fill="none" stroke="#5b6372" stroke-width="1" stroke-dasharray="3 3"></path>
+            <path d="{{ advP90Line }}" fill="none" stroke="#5b6372" stroke-width="1" stroke-dasharray="3 3"></path>
+          </svg>
+          <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--t3);flex-wrap:wrap"><span>P90 <b style="color:#34d399">{{ advP90 }}</b></span><span>P50 <b style="color:var(--gold)">{{ advP50 }}</b></span><span>P10 <b style="color:#f87171">{{ advP10 }}</b></span></div>
+        </div>
+      </div>
+
+      <!-- flags -->
+      <sc-if value="{{ advHasFlags }}" hint-placeholder-val="{{ true }}">
+        <div style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.25);border-radius:14px;padding:15px 18px">
+          <div style="font-size:10.5px;letter-spacing:.7px;font-weight:700;color:#f87171;margin-bottom:9px">⚠ RISK FLAGS</div>
+          <sc-for list="{{ advFlags }}" as="fl" hint-placeholder-count="2">
+            <div style="display:flex;gap:9px;font-size:12.5px;color:var(--text);line-height:1.6;padding:3px 0"><span style="color:#f87171">▸</span><span>{{ fl.t }}</span></div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isMarket }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Marketplace">
+      <div style="max-width:1460px;margin:0 auto;padding:26px 24px 60px">
+
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <h1 style="font-family:'Fraunces';font-size:26px;font-weight:700;margin:0">Permissioned Marketplace</h1>
+        <span style="font-size:10px;letter-spacing:.5px;font-weight:700;padding:4px 9px;border-radius:6px;background:rgba(79,142,247,.14);color:#4f8ef7">XLS-80 DOMAIN · REAL</span>
+      </div>
+      <div style="font-size:13.5px;color:var(--t3);margin-top:6px">A gated storefront: only gold-kyc-credentialed wallets may hold or buy TWG. Every sale lands in the issuer's on-ledger registry.</div>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;background:var(--surface);border:1px solid rgba(var(--line),.1);border-radius:11px;padding:4px;gap:3px">
+      <button onClick="{{ setMktBuyer }}" style="border:none;background:{{ mktBuyerBg }};color:{{ mktBuyerColor }};font-weight:600;font-size:13px;padding:8px 18px;border-radius:8px">🛍 Storefront (buyer)</button>
+      <button onClick="{{ setMktIssuer }}" style="border:none;background:{{ mktIssuerBg }};color:{{ mktIssuerColor }};font-weight:600;font-size:13px;padding:8px 18px;border-radius:8px">📒 Registry (issuer)</button>
+    </div>
+  </div>
+
+  <!-- ══ BUYER / STOREFRONT ══ -->
+  <sc-if value="{{ isBuyerMode }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-top:20px">
+      <!-- progress rail -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:9px;background:var(--surface);border:1px solid rgba(var(--line),.09)">
+          <span style="width:18px;height:18px;border-radius:50%;background:{{ mSignedUpDot }};color:#0f1115;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">1</span>
+          <span style="font-size:12.5px;font-weight:600;color:var(--text)">Open account</span>
+        </div>
+        <span style="color:var(--t5)">→</span>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:9px;background:var(--surface);border:1px solid rgba(var(--line),.09)">
+          <span style="width:18px;height:18px;border-radius:50%;background:{{ mKycDot }};color:#0f1115;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">2</span>
+          <span style="font-size:12.5px;font-weight:600;color:var(--text)">Verify (gold-kyc)</span>
+        </div>
+        <span style="color:var(--t5)">→</span>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:9px;background:var(--surface);border:1px solid rgba(var(--line),.09)">
+          <span style="width:18px;height:18px;border-radius:50%;background:{{ mShopDot }};color:#0f1115;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">3</span>
+          <span style="font-size:12.5px;font-weight:600;color:var(--text)">Buy gold tokens</span>
+        </div>
+      </div>
+
+      <!-- STAGE: signup -->
+      <sc-if value="{{ mIsSignup }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width:520px;margin:0 auto;background:var(--surface);border:1px solid rgba(var(--line),.09);border-radius:16px;padding:26px 28px">
+          <div style="font-family:'Fraunces';font-weight:700;font-size:20px">Open your buyer account</div>
+          <div style="font-size:13px;color:var(--t3);line-height:1.6;margin-top:8px">TokenWald never holds your keys or your money. You buy from the dealer inside a permissioned domain — the ledger enforces who's allowed in.</div>
+          <div style="margin-top:18px;font-size:11px;letter-spacing:.6px;font-weight:700;color:var(--t3)">FULL NAME / ENTITY</div>
+          <input value="{{ mBuyerName }}" onChange="{{ onMBuyerName }}" style="width:100%;margin-top:7px;background:var(--bg);border:1px solid rgba(var(--line),.14);color:var(--text);font-size:14px;padding:11px 12px;border-radius:10px">
+          <div style="margin-top:14px;font-size:11px;letter-spacing:.6px;font-weight:700;color:var(--t3)">JURISDICTION</div>
+          <select value="{{ mJur }}" onChange="{{ onMJur }}" style="width:100%;margin-top:7px;background:var(--bg);border:1px solid rgba(var(--line),.14);color:var(--text);font-size:14px;padding:11px 12px;border-radius:10px">
+            <sc-for list="{{ jurOpts }}" as="j" hint-placeholder-count="5"><option value="{{ j }}">{{ j }}</option></sc-for>
+          </select>
+          <button onClick="{{ doSignup }}" style="width:100%;margin-top:18px;border:none;background:#D9A94B;color:#0f1115;font-weight:700;font-size:14px;padding:12px;border-radius:11px">Open account →</button>
+          <div style="font-size:11px;color:var(--t4);margin-top:10px;text-align:center">No custody · no fund routing · redeemable commodity tokens only</div>
+        </div>
+      </sc-if>
+
+      <!-- STAGE: verify -->
+      <sc-if value="{{ mIsVerify }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:560px;margin:0 auto;background:var(--surface);border:1px solid rgba(167,139,250,.28);border-radius:16px;padding:26px 28px">
+          <div style="display:flex;align-items:center;gap:9px"><span style="font-size:18px">🪪</span><span style="font-family:'Fraunces';font-weight:700;font-size:20px">Verify to enter the domain</span></div>
+          <div style="font-size:13px;color:var(--t3);line-height:1.6;margin-top:10px">Welcome, {{ mBuyerName }}. Before you can hold TWG, the issuer must grant you a <b style="color:var(--text)">gold-kyc</b> credential. This is what the permissioned domain checks on every transfer — no credential, no tokens (tecNO_AUTH).</div>
+          <div style="margin-top:16px;background:var(--surface2);border-radius:11px;padding:14px 16px">
+            <div style="font-size:11px;letter-spacing:.6px;font-weight:700;color:var(--t3);margin-bottom:8px">VERIFICATION CHECKLIST</div>
+            <sc-for list="{{ kycChecklist }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex;gap:9px;font-size:12.5px;color:var(--t2);padding:3px 0"><span style="color:#34d399">✓</span><span>{{ c }}</span></div>
+            </sc-for>
+          </div>
+          <button onClick="{{ doVerify }}" style="width:100%;margin-top:18px;border:none;background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:#0f1115;font-weight:700;font-size:14px;padding:12px;border-radius:11px">Complete verification · issue gold-kyc</button>
+          <div style="font-size:11px;color:var(--t4);margin-top:10px;text-align:center">KYC is simulated in this demo · the credential + domain gate are real XRPL primitives</div>
+        </div>
+      </sc-if>
+
+      <!-- STAGE: shop -->
+      <sc-if value="{{ mIsShop }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 15px;border-radius:11px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);margin-bottom:16px">
+            <span style="width:8px;height:8px;border-radius:50%;background:#34d399"></span>
+            <span style="font-size:13px;color:#34d399;font-weight:600">gold-kyc active — {{ mBuyerName }} ({{ mJur }}) is admitted to the twg-gold domain.</span>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="background:var(--surface);border:1px solid rgba(217,169,75,.28);border-radius:16px;padding:22px 24px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="width:46px;height:46px;border-radius:12px;background:#D9A94B;display:flex;align-items:center;justify-content:center;font-size:24px">🥇</div>
+                  <div style="flex:1">
+                    <div style="font-family:'Fraunces';font-weight:700;font-size:18px">TWG · Vaulted Gold</div>
+                    <div style="font-size:12.5px;color:var(--t3)">1 token = 1 gram · redeemable · reserve-backed 1:1</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-family:'Fraunces';font-weight:700;font-size:22px;color:var(--gold)">€{{ mPrice }}</div>
+                    <div style="font-size:11px;color:var(--t4)">per gram · live</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(79,142,247,.14);color:#4f8ef7">MPT · REAL</span>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(52,211,153,.14);color:#34d399">PROOF-OF-RESERVE</span>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(217,169,75,.14);color:var(--gold)">RLUSD SETTLEMENT · Batch</span>
+                </div>
+              </div>
+              <div style="background:var(--surface);border:1px dashed rgba(var(--line),.14);border-radius:16px;padding:20px 24px;opacity:.65">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="width:46px;height:46px;border-radius:12px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:24px">🥈</div>
+                  <div style="flex:1"><div style="font-family:'Fraunces';font-weight:700;font-size:18px">TWS · Vaulted Silver</div><div style="font-size:12.5px;color:var(--t3)">Same engine, new asset class</div></div>
+                  <span style="font-size:11px;font-weight:700;padding:5px 11px;border-radius:6px;border:1px solid rgba(var(--line),.18);color:var(--t3)">PHASE 2 — SOON</span>
+                </div>
+              </div>
+            </div>
+            <div style="background:var(--surface);border:1px solid rgba(var(--line),.1);border-radius:16px;padding:20px 22px;position:sticky;top:120px">
+              <div style="font-family:'Fraunces';font-weight:600;font-size:15px;margin-bottom:14px">Buy gold tokens</div>
+              <div style="font-size:11px;letter-spacing:.6px;font-weight:700;color:var(--t3)">AMOUNT (GRAMS)</div>
+              <input value="{{ mBuyGrams }}" onChange="{{ onMBuyGrams }}" style="width:100%;margin-top:7px;background:var(--bg);border:1px solid rgba(var(--line),.14);color:var(--text);font-size:16px;padding:11px 12px;border-radius:10px;font-family:'JetBrains Mono'">
+              <div style="display:flex;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid rgba(var(--line),.08)">
+                <span style="font-size:12.5px;color:var(--t3)">Unit price</span><span style="font-size:12.5px;font-family:'JetBrains Mono'">€{{ mPrice }}/g</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:8px">
+                <span style="font-size:13px;color:var(--text);font-weight:600">You pay (RLUSD)</span><span style="font-size:16px;font-family:'JetBrains Mono';font-weight:700;color:var(--gold)">{{ mCost }}</span>
+              </div>
+              <button onClick="{{ doBuy }}" style="width:100%;margin-top:16px;border:none;background:#D9A94B;color:#0f1115;font-weight:700;font-size:14px;padding:12px;border-radius:11px">Buy · settle atomically</button>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap;justify-content:center">
+                <span style="font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:5px;background:rgba(79,142,247,.14);color:#4f8ef7">domain-gated</span>
+                <span style="color:var(--t5);font-size:10px">→</span>
+                <span style="font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:5px;background:rgba(217,169,75,.14);color:var(--gold)">Batch atomic</span>
+                <span style="color:var(--t5);font-size:10px">→</span>
+                <span style="font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:5px;background:rgba(52,211,153,.14);color:#34d399">registry + reserve</span>
+              </div>
+              <div style="font-size:11px;color:var(--t4);margin-top:12px;text-align:center;line-height:1.5">Your tokens land in your own wallet. Redeem for physical gold or cash out in RLUSD anytime.</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ══ ISSUER / REGISTRY ══ -->
+  <sc-if value="{{ isIssuerMode }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:20px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:13px;padding:15px 17px"><div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3)">GRAMS SOLD</div><div style="font-family:'Fraunces';font-size:23px;font-weight:700;margin-top:7px;color:var(--gold)">{{ mSold }} g</div><div style="font-size:11.5px;color:var(--t4);margin-top:4px">across the domain</div></div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:13px;padding:15px 17px"><div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3)">VERIFIED BUYERS</div><div style="font-family:'Fraunces';font-size:23px;font-weight:700;margin-top:7px;color:#4f8ef7">{{ mBuyers }}</div><div style="font-size:11.5px;color:var(--t4);margin-top:4px">all gold-kyc credentialed</div></div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:13px;padding:15px 17px"><div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3)">PRIMARY SALES</div><div style="font-family:'Fraunces';font-size:23px;font-weight:700;margin-top:7px;color:#a78bfa">{{ mRevenue }}</div><div style="font-size:11.5px;color:var(--t4);margin-top:4px">RLUSD settled</div></div>
+        <div style="background:var(--surface);border:1px solid rgba(52,211,153,.22);border-radius:13px;padding:15px 17px"><div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:#34d399">RESERVE COVERAGE</div><div style="font-family:'Fraunces';font-size:23px;font-weight:700;margin-top:7px;color:#34d399">{{ mCoverage }}%</div><div style="font-size:11.5px;color:var(--t4);margin-top:4px">vault vs sold</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;margin-top:16px;align-items:start">
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;overflow:hidden">
+          <div style="padding:13px 18px;border-bottom:1px solid rgba(var(--line),.07);display:flex;align-items:center;gap:9px">
+            <span style="font-family:'Fraunces';font-weight:600;font-size:14px">Holder registry · every sale on-ledger</span>
+            <span style="font-size:9.5px;font-weight:700;color:#4f8ef7;border:1px solid rgba(79,142,247,.3);padding:2px 6px;border-radius:4px">CREDENTIALS · REAL</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1.3fr 1fr .7fr .95fr 1.05fr .7fr;column-gap:20px;font-size:10px;letter-spacing:.5px;font-weight:700;color:var(--t3);padding:10px 18px;border-bottom:1px solid rgba(var(--line),.06)">
+            <span>HOLDER</span><span>JURISDICTION</span><span style="text-align:right">GRAMS</span><span style="text-align:right">VALUE</span><span>CREDENTIAL</span><span style="text-align:right">TX</span>
+          </div>
+          <sc-for list="{{ mRegistry }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:1.3fr 1fr .7fr .95fr 1.05fr .7fr;column-gap:20px;font-size:12.5px;padding:11px 18px;border-bottom:1px solid rgba(var(--line),.05);background:{{ r.rowBg }};align-items:center">
+              <span style="color:var(--text);font-weight:600">{{ r.buyer }}</span>
+              <span style="color:var(--t2)">{{ r.jur }}</span>
+              <span style="text-align:right;font-family:'JetBrains Mono';color:var(--text)">{{ r.gStr }}</span>
+              <span style="text-align:right;font-family:'JetBrains Mono';color:var(--t2)">{{ r.valStr }}</span>
+              <span><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(52,211,153,.12);color:{{ r.credColor }}">{{ r.cred }}</span></span>
+              <span style="text-align:right;font-family:'JetBrains Mono';font-size:11px;color:var(--t4)">{{ r.hash }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="font-family:'Fraunces';font-weight:600;font-size:14px;margin-bottom:14px">Sold by jurisdiction</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ mJurRows }}" as="j" hint-placeholder-count="5">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--t2)">{{ j.name }}</span><span style="font-family:'JetBrains Mono';color:var(--t3)">{{ j.g }} g · {{ j.pct }}%</span></div>
+                <div style="height:7px;border-radius:4px;background:var(--bg);overflow:hidden"><div style="height:100%;width:{{ j.barW }};background:{{ j.color }};border-radius:4px"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(var(--line),.08);font-size:11.5px;color:var(--t4);line-height:1.6">Every holder is credentialed and recorded on-ledger. Resale outside the domain is refused automatically — the registry can never contain an unverified wallet.</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- guardrail -->
+  <div style="margin-top:18px;display:flex;gap:11px;align-items:flex-start;padding:13px 16px;border:1px solid rgba(var(--line),.08);border-radius:12px;background:var(--surface2)">
+    <span style="font-size:15px">🛡</span>
+    <div style="font-size:12px;color:var(--t3);line-height:1.6"><b style="color:var(--t2)">Primary market only.</b> TokenWald is a gated storefront for the dealer's own redeemable tokens — no order-matching, no secondary exchange, no custody, no fund routing. The domain and credentials are enforced on-ledger; buyers self-custody what they buy.</div>
+  </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Dashboards">
+      <div style="max-width:1460px;margin:0 auto;padding:26px 24px 60px">
+
+  <!-- header + role toggle -->
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+    <div>
+      <h1 style="font-family:'Fraunces';font-size:26px;font-weight:700;margin:0">Dashboards</h1>
+      <div style="font-size:13.5px;color:var(--t3);margin-top:5px">One market, two personas. Same simulated gold feed, ticking live.</div>
+    </div>
+    <div style="flex:1"></div>
+    <sc-if value="{{ showFeedControls }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px dashed rgba(167,139,250,.4);border-radius:9px">
+      <span style="font-size:9.5px;letter-spacing:.5px;font-weight:700;color:#a78bfa">SIMULATED FEED</span>
+      <button onClick="{{ dip }}" style="border:1px solid rgba(248,113,113,.35);background:transparent;color:#f87171;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:6px">▼ dip</button>
+      <button onClick="{{ spike }}" style="border:1px solid rgba(52,211,153,.35);background:transparent;color:#34d399;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:6px">▲ spike</button>
+    </div>
+    </sc-if>
+    <div style="display:flex;background:var(--surface);border:1px solid rgba(var(--line),.1);border-radius:11px;padding:4px;gap:3px">
+      <button onClick="{{ setIssuer }}" style="border:none;background:{{ issuerBg }};color:{{ issuerColor }};font-weight:600;font-size:13px;padding:8px 18px;border-radius:8px">🏛 Issuer (dealer)</button>
+      <button onClick="{{ setBuyer }}" style="border:none;background:{{ buyerBg }};color:{{ buyerColor }};font-weight:600;font-size:13px;padding:8px 18px;border-radius:8px">💼 Buyer (investor)</button>
+    </div>
+  </div>
+
+  <!-- ══ ISSUER ══ -->
+  <sc-if value="{{ isIssuer }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <sc-for list="{{ dKpis }}" as="k" hint-placeholder-count="6">
+          <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:13px;padding:15px 17px">
+            <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3)">{{ k.label }}</div>
+            <div style="font-family:'Fraunces';font-size:23px;font-weight:700;margin-top:7px;color:{{ k.c }}">{{ k.v }}</div>
+            <div style="font-size:11.5px;color:#5b6372;margin-top:4px">{{ k.sub }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;margin-top:16px">
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span style="font-family:'Fraunces';font-weight:600;font-size:14px">Tokenized supply over time</span><span style="font-size:9.5px;font-weight:700;color:#4f8ef7;border:1px solid rgba(79,142,247,.3);padding:2px 6px;border-radius:4px">MPT · REAL</span></div>
+          <svg viewBox="0 0 340 120" style="width:100%;height:auto;display:block">
+            <path d="{{ supplyArea }}" fill="rgba(217,169,75,.12)"></path>
+            <path d="{{ supplyLine }}" fill="none" stroke="#D9A94B" stroke-width="2"></path>
+          </svg>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span style="font-family:'Fraunces';font-weight:600;font-size:14px">Reserve coverage over time</span><span style="font-size:9.5px;font-weight:700;color:#34d399;border:1px solid rgba(52,211,153,.3);padding:2px 6px;border-radius:4px">ORACLE · REAL</span></div>
+          <svg viewBox="0 0 340 120" style="width:100%;height:auto;display:block">
+            <rect x="0" y="{{ covY100 }}" width="340" height="{{ covDangerH }}" fill="rgba(248,113,113,.09)"></rect>
+            <line x1="0" y1="{{ covY100 }}" x2="340" y2="{{ covY100 }}" stroke="#f87171" stroke-width="1" stroke-dasharray="4 4"></line>
+            <path d="{{ covLine }}" fill="none" stroke="#34d399" stroke-width="2"></path>
+          </svg>
+          <div style="font-size:10.5px;color:#5b6372;margin-top:6px">Dashed line = 100% · red zone = under-collateralized (mint blocked)</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="font-family:'Fraunces';font-weight:600;font-size:14px;margin-bottom:12px">Holders by jurisdiction</div>
+          <div style="display:flex;align-items:center;gap:18px">
+            <svg viewBox="0 0 140 140" style="width:130px;height:130px;flex:none">
+              <sc-for list="{{ donutSegs }}" as="seg" hint-placeholder-count="5">
+                <circle cx="70" cy="70" r="54" fill="none" stroke="{{ seg.color }}" stroke-width="16" stroke-dasharray="{{ seg.dash }}" stroke-dashoffset="{{ seg.off }}" transform="rotate(-90 70 70)"></circle>
+              </sc-for>
+              <text x="70" y="66" text-anchor="middle" style="fill:var(--text)" font-size="20" font-weight="700" font-family="Fraunces">{{ holdersTotal }}</text>
+              <text x="70" y="84" text-anchor="middle" fill="#5b6372" font-size="9">holders</text>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+              <sc-for list="{{ donutSegs }}" as="seg" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:9px;height:9px;border-radius:3px;background:{{ seg.color }}"></div><span style="color:var(--t2);flex:1">{{ seg.name }}</span><span style="font-family:'JetBrains Mono';color:var(--t3)">{{ seg.v }} · {{ seg.pct }}%</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="font-family:'Fraunces';font-weight:600;font-size:14px;margin-bottom:12px">Monthly issuance vs redemption (g)</div>
+          <svg viewBox="0 0 340 138" style="width:100%;height:auto;display:block">
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="8">
+              <rect x="{{ b.x }}" y="{{ b.yI }}" width="12" height="{{ b.hI }}" rx="2" fill="#D9A94B"></rect>
+              <rect x="{{ b.xr }}" y="{{ b.yR }}" width="12" height="{{ b.hR }}" rx="2" fill="#4f8ef7"></rect>
+              <text x="{{ b.lx }}" y="134" text-anchor="middle" fill="#5b6372" font-size="9">{{ b.label }}</text>
+            </sc-for>
+          </svg>
+          <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--t3)"><span>■ <span style="color:var(--gold)">issuance</span></span><span>■ <span style="color:#4f8ef7">redemption</span></span></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px;grid-column:span 2">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+            <span style="font-family:'Fraunces';font-weight:600;font-size:14px">Projected vs actual uptake — Advisor P10 / P50 / P90</span>
+            <span style="font-size:9.5px;font-weight:700;color:#a78bfa;border:1px solid rgba(167,139,250,.3);padding:2px 6px;border-radius:4px">SIMULATED</span>
+          </div>
+          <svg viewBox="0 0 340 120" style="width:100%;height:auto;display:block">
+            <path d="{{ upBand }}" fill="rgba(167,139,250,.13)"></path>
+            <path d="{{ upP50 }}" fill="none" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="5 4"></path>
+            <path d="{{ upActual }}" fill="none" stroke="#D9A94B" stroke-width="2.2"></path>
+          </svg>
+          <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--t3)"><span style="color:var(--gold)">— actual tokenized €</span><span style="color:#a78bfa">-- P50 projection</span><span>▨ P10–P90 band (peaks {{ upMaxStr }})</span><sc-if value="{{ hasPlan }}" hint-placeholder-val="{{ false }}"><span style="color:#34d399">✓ synced from your Advisor plan</span></sc-if></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(217,169,75,.22);border-radius:14px;padding:16px 18px">
+          <div style="font-family:'Fraunces';font-weight:600;font-size:14px;margin-bottom:4px">Live Token control panel</div>
+          <div style="font-size:11.5px;color:var(--t3);margin-bottom:12px">AI proposes, the dealer disposes. Controls act through the domain — never through TokenWald.</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <button onClick="{{ togglePause }}" style="border:1px solid rgba(var(--line),.13);background:{{ pauseBg }};color:{{ pauseColor }};font-weight:600;font-size:13px;padding:10px 14px;border-radius:10px;text-align:left">⏸ {{ pauseLabel }}</button>
+            <button onClick="{{ topUp }}" style="border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.06);color:#34d399;font-weight:600;font-size:13px;padding:10px 14px;border-radius:10px;text-align:left">⛏ Simulate reserve top-up · +1,000 g</button>
+          </div>
+          <div style="margin-top:14px;font-size:10.5px;letter-spacing:.6px;font-weight:600;color:var(--t3)">COMPLIANCE ALERTS · FROM THE dNFT</div>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:8px;max-height:170px;overflow:auto">
+            <sc-for list="{{ dAlerts }}" as="a" hint-placeholder-count="3">
+              <div style="display:flex;gap:9px;align-items:flex-start;padding:8px 10px;background:var(--raised);border-radius:9px;border-left:3px solid {{ a.color }}">
+                <div style="flex:1;font-size:12px;color:var(--t2);line-height:1.45">{{ a.text }}</div>
+                <span style="font-size:10px;color:#5b6372;flex:none">{{ a.ts }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ══ BUYER ══ -->
+  <sc-if value="{{ isBuyer }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <sc-for list="{{ bKpis }}" as="k" hint-placeholder-count="5">
+          <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:13px;padding:15px 17px">
+            <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3)">{{ k.label }}</div>
+            <div style="font-family:'Fraunces';font-size:22px;font-weight:700;margin-top:7px;color:{{ k.c }}">{{ k.v }}</div>
+            <div style="font-size:11.5px;color:#5b6372;margin-top:4px">{{ k.sub }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-top:16px">
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="font-family:'Fraunces';font-weight:600;font-size:14px;margin-bottom:12px">Portfolio value vs gold spot</div>
+          <svg viewBox="0 0 340 110" style="width:100%;height:auto;display:block">
+            <path d="{{ spotLine }}" fill="none" stroke="#5b6372" stroke-width="1.5" stroke-dasharray="4 3"></path>
+            <path d="{{ portLine }}" fill="none" stroke="#D9A94B" stroke-width="2.2"></path>
+          </svg>
+          <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--t3)"><span style="color:var(--gold)">— your holdings</span><span>-- spot €/g</span><span style="color:#a78bfa">SIMULATED feed</span></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="font-family:'Fraunces';font-weight:600;font-size:14px;margin-bottom:12px">Buy / redeem history</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <sc-for list="{{ bHistory }}" as="h" hint-placeholder-count="4">
+              <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(var(--line),.05)">
+                <div style="flex:none;width:8px;height:8px;border-radius:50%;background:{{ h.color }};margin-top:5px"></div>
+                <div style="flex:1"><span style="font-size:11px;font-weight:700;letter-spacing:.4px;color:{{ h.color }}">{{ h.type }}</span><div style="font-size:12.5px;color:var(--t2);margin-top:2px">{{ h.line }}</div></div>
+                <span style="font-size:11px;color:#5b6372">{{ h.ts }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(var(--line),.08);border-radius:14px;padding:16px 18px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span style="font-family:'Fraunces';font-weight:600;font-size:14px">Projected value · 12-month P10/P50/P90</span><span style="font-size:9.5px;font-weight:700;color:#a78bfa;border:1px solid rgba(167,139,250,.3);padding:2px 6px;border-radius:4px">SIMULATED</span></div>
+          <svg viewBox="0 0 340 110" style="width:100%;height:auto;display:block">
+            <path d="{{ fanBand }}" fill="rgba(217,169,75,.1)"></path>
+            <path d="{{ fanP50 }}" fill="none" stroke="#D9A94B" stroke-width="2" stroke-dasharray="5 4"></path>
+          </svg>
+          <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--t3);flex-wrap:wrap"><span>P90 <b style="color:#34d399">{{ fanHi }}</b></span><span>P50 <b style="color:var(--gold)">{{ fanMid }}</b></span><span>P10 <b style="color:#f87171">{{ fanLo }}</b></span></div>
+        </div>
+      </div>
+
+      <!-- LIVE TOKEN AUTOMATION -->
+      <div style="margin-top:18px;background:linear-gradient(135deg,var(--surface),var(--surface) 55%);border:1px solid rgba(167,139,250,.3);border-radius:16px;padding:20px 22px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-family:'Fraunces';font-weight:700;font-size:18px;color:#c4b5fd">⚡ Live Token Automation</span>
+          <span style="font-size:12.5px;color:var(--t3)">Connect your token to rules. You author, you approve — the ledger executes.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:18px;margin-top:16px;align-items:start">
+          <div style="background:var(--surface2);border:1px solid rgba(var(--line),.09);border-radius:13px;padding:15px 16px">
+            <div style="font-size:10.5px;letter-spacing:.7px;font-weight:600;color:var(--t3);margin-bottom:10px">NEW RULE</div>
+            <select value="{{ rfType }}" onChange="{{ onRfType }}" style="width:100%;background:var(--bg);border:1px solid rgba(var(--line),.13);color:var(--text);font-size:13px;padding:9px 10px;border-radius:9px">
+              <option value="stop-loss">Auto-redeem if price drops below X (stop-loss)</option>
+              <option value="take-profit">Auto-redeem if price rises above Y (take-profit)</option>
+              <option value="alert">Alert me — don't act — at Z</option>
+              <option value="rebalance">Auto-rebalance: keep holdings ≤ N grams</option>
+            </select>
+            <input value="{{ rfThreshold }}" onChange="{{ onRfTh }}" placeholder="{{ rfThPh }}" style="width:100%;margin-top:9px;background:var(--bg);border:1px solid rgba(var(--line),.13);color:var(--text);font-size:13px;padding:9px 10px;border-radius:9px;font-family:'JetBrains Mono'">
+            <input value="{{ rfGrams }}" onChange="{{ onRfG }}" placeholder="grams to redeem" style="width:100%;margin-top:9px;background:var(--bg);border:1px solid rgba(var(--line),.13);color:var(--text);font-size:13px;padding:9px 10px;border-radius:9px;font-family:'JetBrains Mono'">
+            <button onClick="{{ doAddRule }}" style="width:100%;margin-top:11px;border:none;background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:#0f1115;font-weight:700;font-size:13px;padding:10px;border-radius:9px">Arm rule (pre-approve)</button>
+            <div style="font-size:10.5px;color:#5b6372;margin-top:9px;line-height:1.5">Arming = your one-time human approval. The agent may then execute ONLY this, on-ledger, atomically.</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-if value="{{ noRules }}" hint-placeholder-val="{{ true }}">
+              <div style="border:1px dashed rgba(var(--line),.14);border-radius:13px;padding:26px;text-align:center;color:#5b6372;font-size:13px">No rules armed yet. Create one on the left — then watch it fire as the price ticks (or nudge the SIMULATED feed above).<br><span style="font-size:11.5px">Rules armed here are also read by Sandbox step g.</span></div>
+            </sc-if>
+            <sc-for list="{{ rulesList }}" as="r" hint-placeholder-count="0">
+              <div style="animation:twFadeUp .3s ease;background:var(--surface2);border:1px solid {{ r.stColor }}44;border-radius:13px;padding:14px 16px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <span style="font-family:'Fraunces';font-weight:600;font-size:14px">{{ r.name }}</span>
+                  <span style="font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:5px;background:{{ r.stColor }}22;color:{{ r.stColor }}">{{ r.stLabel }}</span>
+                  <div style="flex:1"></div>
+                  <sc-if value="{{ r.canToggle }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ r.doToggle }}" style="border:1px solid rgba(var(--line),.14);background:transparent;color:var(--t3);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px">{{ r.toggleLabel }}</button>
+                  </sc-if>
+                  <button onClick="{{ r.doDel }}" style="border:1px solid rgba(248,113,113,.3);background:transparent;color:#f87171;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px">✕</button>
+                </div>
+                <div style="display:flex;gap:18px;margin-top:8px;font-size:12.5px;flex-wrap:wrap">
+                  <span style="color:var(--t3)">IF <b style="color:var(--text);font-family:'JetBrains Mono';font-size:12px">{{ r.cond }}</b></span>
+                  <span style="color:var(--t3)">THEN <b style="color:var(--text)">{{ r.act }}</b></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:11px;flex-wrap:wrap">
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(167,139,250,.15);color:#a78bfa">AI detects</span><span style="color:#3a4150">→</span>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(var(--line),.07);color:var(--t2)">✓ pre-approved by you</span><span style="color:#3a4150">→</span>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(79,142,247,.15);color:#4f8ef7">Batch executes atomically</span><span style="color:#3a4150">→</span>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(217,169,75,.15);color:var(--gold)">dNFT records</span><span style="color:#3a4150">→</span>
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(52,211,153,.15);color:#34d399">reserve updates</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- guardrail -->
+  <div style="margin-top:18px;display:flex;gap:11px;align-items:flex-start;padding:13px 16px;border:1px solid rgba(var(--line),.08);border-radius:12px;background:var(--surface2)">
+    <span style="font-size:15px">🛡</span>
+    <div style="font-size:12px;color:var(--t3);line-height:1.6"><b style="color:var(--t2)">Guardrail — what we never do:</b> rules are user-authored and user-approved. TokenWald never holds keys, never routes funds, never matches orders, never lends, never fractionalizes. Automation proposes and executes only what the holder pre-authorized on-ledger. The discipline is the moat.</div>
+  </div>
+</div>
+    </div>
+  </sc-if>
+
+  <!-- ══ FIT 4 START BADGE ══ -->
+  <div style="position:fixed;left:14px;bottom:14px;z-index:70;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:8px;background:rgba(20,23,29,.9);border:1px solid rgba(var(--line),.08);backdrop-filter:blur(8px)">
+    <div style="width:6px;height:6px;border-radius:50%;background:#D9A94B"></div>
+    <span style="font-size:11px;color:var(--t3);letter-spacing:.4px">FIT 4 START · DEMO · SIMULATION (TESTNET-PARITY)</span>
+  </div>
+
+  <!-- ══ TOASTS ══ -->
+  <div style="position:fixed;right:16px;bottom:16px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:360px">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+      <div style="animation:twToast .25s ease;padding:11px 14px;border-radius:11px;background:var(--raised);border:1px solid {{ t.border }};box-shadow:0 8px 30px rgba(0,0,0,.5);display:flex;gap:10px;align-items:flex-start">
+        <div style="width:8px;height:8px;border-radius:50%;background:{{ t.dot }};margin-top:4px;flex:none"></div>
+        <div style="font-size:12.5px;line-height:1.45;color:var(--text)">{{ t.text }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tickSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:1,&quot;max&quot;:10,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Live market feed&quot;,&quot;description&quot;:&quot;Seconds between simulated gold-price ticks&quot;},&quot;demoControls&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Live market feed&quot;,&quot;description&quot;:&quot;Show the ▼dip / ▲spike demo buttons on Dashboards (handy on stage, hide for investor hand-off)&quot;}}">
+class Component extends DCLogic {
+  state = {
+    view: 'landing',
+    theme: 'dark',
+    live: false, explorer: 'https://testnet.xrpl.org',
+    waitEmail: '',
+    price: 104.20, series: [], lastDelta: 0,
+    role: 'issuer',
+    // shared compliance config (copilot edits this)
+    compliance: {
+      jurisdictions: ['EU / MiCA'],
+      regime: 'MiCA ART — Art. 16(2) exemption (< €5M)',
+      classification: 'Asset-referenced token (redeemable commodity)',
+      eligibility: 'KYC-verified retail + professional (EU)',
+      credentials: ['gold-kyc'],
+      transferRestrictions: 'Permissioned domain: credentialed EU wallets only',
+      redemption: 'Physical redemption at dealer; RLUSD/XRP cash-out via Batch',
+      filings: ['MiCA white paper (Art. 16 notification)'],
+      riskFlags: []
+    },
+    // playground
+    pg: {
+      active: 0, busy: false, done: [],
+      vault: 0, minted: 0, feedConnected: false,
+      euCred: false, dubaiCred: false, varaCred: false,
+      holdings: { issuer: 0, eu: 0, dubai: 0, partner: 0 },
+      balances: { issuer: 0, eu: 0, dubai: 0 },
+      rlusd: { eu: 0, dubai: 0 },
+      dnft: [], ledger: [],
+      stepNote: '', seededFrom: null
+    },
+    // dashboards
+    rules: [],
+    ruleForm: { type: 'stop-loss', threshold: '', grams: 40 },
+    issuancePaused: false,
+    buyer: { grams: 120, basis: 96.40, history: [
+      { ts: 'Mar 12', type: 'BUY', grams: 60, price: 92.10 },
+      { ts: 'Apr 03', type: 'BUY', grams: 40, price: 95.80 },
+      { ts: 'May 21', type: 'BUY', grams: 30, price: 99.30 },
+      { ts: 'Jun 09', type: 'REDEEM', grams: 10, price: 102.60 }
+    ]},
+    marketRole: 'buyer',
+    market: {
+      signedUp: false, kyc: false, buyerName: 'Anna Keller', jurisdiction: 'EU / MiCA',
+      buyForm: { grams: 25 },
+      registry: [
+        { buyer: 'M. Weber', jur: 'Germany', grams: 240, price: 96.20, ts: 'Mar 12', cred: 'gold-kyc', hash: '7A21·F9' },
+        { buyer: 'GoldHaus GmbH', jur: 'Germany', grams: 1500, price: 97.40, ts: 'Mar 28', cred: 'gold-kyc', hash: 'C4E0·1B' },
+        { buyer: 'L. Gruber', jur: 'Austria', grams: 180, price: 99.10, ts: 'Apr 09', cred: 'gold-kyc', hash: '9F72·3A' },
+        { buyer: 'Maison Or', jur: 'France', grams: 620, price: 100.30, ts: 'Apr 22', cred: 'gold-kyc', hash: '2B88·D5' },
+        { buyer: 'Banque Lux', jur: 'Luxembourg', grams: 900, price: 101.80, ts: 'May 06', cred: 'gold-kyc', hash: 'E1A9·4C' },
+        { buyer: 'A. Haddad', jur: 'UAE — Dubai', grams: 320, price: 103.20, ts: 'May 24', cred: 'vara-recognition', hash: 'F30D·77' }
+      ]
+    },
+    feesEarned: 18420,
+    alerts: [
+      { layer: 'reserve', text: 'Custodian feed heartbeat OK — coverage 118%', ts: '2m ago' },
+      { layer: 'ai', text: 'AI: MiCA Art.16 notification draft ready for review', ts: '1h ago' }
+    ],
+    toasts: [],
+    // copilot
+    cp: { preset: null, text: '', fileName: null, analyzing: false, profile: null, source: null, applied: false, doc: 0, sent: false,
+      chat: { country: '', input: '', messages: [], busy: false } },
+    // advisor
+    adv: { vaultKg: 250, spot: 104.20, monthlySales: 400000, kycPct: 35, jurisdictions: ['EU / MiCA'], risk: 'balanced', aiPlan: null, aiBusy: false },
+    advisorPlan: null
+  };
+
+  applyTheme() { try { document.documentElement.setAttribute('data-theme', this.state.theme); localStorage.setItem('tw-theme', this.state.theme); } catch (e) {} }
+  toggleTheme() { this.setState(st => ({ theme: st.theme === 'dark' ? 'light' : 'dark' }), () => this.applyTheme()); }
+  componentDidMount() {
+    try { const t = localStorage.getItem('tw-theme'); if (t) this.setState({ theme: t }); } catch (e) {}
+    this.applyTheme();
+    const s = []; let p = 98.5;
+    for (let i = 0; i < 90; i++) { p += (Math.random() - .46) * .35; s.push(+p.toFixed(2)); }
+    s.push(this.state.price);
+    this.setState({ series: s });
+    this._iv = setInterval(() => this.tick(), (this.props.tickSeconds ?? 3) * 1000);
+    // Probe the backend: if it answers, playground steps run REAL XRPL
+    // Testnet transactions; otherwise the built-in simulation is used.
+    fetch('/api/status').then(r => r.ok ? r.json() : null).then(s2 => {
+      if (s2 && s2.live) this.setState({ live: true, explorer: s2.explorer || 'https://testnet.xrpl.org' });
+    }).catch(() => {});
+  }
+  componentWillUnmount() { clearInterval(this._iv); }
+
+  tick(force) {
+    this.setState(st => {
+      const d = force !== undefined ? force : (Math.random() - .5) * .42;
+      const price = +(st.price + d).toFixed(2);
+      const series = [...st.series, price].slice(-160);
+      return { price, series, lastDelta: d };
+    }, () => this.checkRules());
+  }
+
+  // ── helpers ──────────────────────────────
+  sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  hash() { const h = '0123456789ABCDEF'; let s = ''; for (let i = 0; i < 12; i++) s += h[Math.floor(Math.random() * 16)]; return s.slice(0, 6) + '…' + s.slice(6); }
+  eur(n) { return '€' + Math.round(n).toLocaleString('en-US'); }
+  toast(text, tone) {
+    const t = { id: Math.random(), text, tone: tone || 'gold' };
+    this.setState(st => ({ toasts: [...st.toasts, t].slice(-3) }));
+    setTimeout(() => this.setState(st => ({ toasts: st.toasts.filter(x => x.id !== t.id) })), 5200);
+  }
+  pushTx(desc, primitive, result, layer, real, realHash, explorer) {
+    this.setState(st => ({ pg: { ...st.pg, ledger: [{ hash: realHash || this.hash(), explorer: explorer || null, onChain: !!explorer, desc, primitive, result, layer: layer || 'domain', real: real !== false, ts: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }, ...st.pg.ledger].slice(0, 60) } }));
+  }
+  bumpDnft(note, patch) {
+    this.setState(st => {
+      const prev = st.pg.dnft[0];
+      const base = prev ? JSON.parse(JSON.stringify(prev.state)) : {};
+      const next = Object.assign(base, patch);
+      const v = prev ? prev.v + 1 : 0;
+      next.version = 'v' + v;
+      next.updatedAt = new Date().toISOString().slice(0, 19) + 'Z';
+      return { pg: { ...st.pg, dnft: [{ v, note, ts: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }), state: next }, ...st.pg.dnft] } };
+    });
+  }
+  addAlert(layer, text) {
+    this.setState(st => ({ alerts: [{ layer, text, ts: 'now' }, ...st.alerts].slice(0, 12) }));
+  }
+  setPg(patch) { this.setState(st => ({ pg: { ...st.pg, ...patch } })); }
+
+  // ── automation rules ─────────────────────
+  addRule() {
+    const f = this.state.ruleForm;
+    const th = parseFloat(f.threshold);
+    if (!th || th <= 0) { this.toast('Set a valid € / g threshold first.', 'red'); return; }
+    const names = { 'stop-loss': 'Stop-loss auto-redeem', 'take-profit': 'Take-profit auto-redeem', 'alert': 'Price alert (notify only)', 'rebalance': 'Auto-rebalance holdings cap' };
+    const rule = { id: Math.random().toString(36).slice(2, 7), type: f.type, threshold: th, grams: +f.grams || 40, status: 'armed', firedAt: null };
+    this.setState(st => ({ rules: [...st.rules, rule] }));
+    this.toast('Rule armed: ' + names[f.type] + ' @ €' + th + '/g. Pre-approved by holder — executes on-ledger only.', 'violet');
+  }
+  toggleRule(id) { this.setState(st => ({ rules: st.rules.map(r => r.id === id ? { ...r, status: r.status === 'paused' ? 'armed' : (r.status === 'armed' ? 'paused' : r.status) } : r) })); }
+  delRule(id) { this.setState(st => ({ rules: st.rules.filter(r => r.id !== id) })); }
+  checkRules() {
+    const p = this.state.price;
+    this.state.rules.forEach(r => {
+      if (r.status !== 'armed') return;
+      const hit = (r.type === 'stop-loss' && p <= r.threshold) || (r.type === 'take-profit' && p >= r.threshold) || (r.type === 'alert' && Math.abs(p - r.threshold) < .15) || (r.type === 'rebalance' && this.state.buyer.grams > r.threshold);
+      if (hit) this.fireRule(r);
+    });
+  }
+  async fireRule(r) {
+    this.setState(st => ({ rules: st.rules.map(x => x.id === r.id ? { ...x, status: 'triggered', firedAt: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) } : x) }));
+    const p = this.state.price;
+    if (r.type === 'alert') {
+      this.toast('🔔 Price alert: XAU at €' + p + '/g (threshold €' + r.threshold + '). No action taken — notify-only rule.', 'violet');
+      this.addAlert('ai', 'Price alert fired at €' + p + '/g — notify-only, no execution.');
+      return;
+    }
+    const g = r.type === 'rebalance' ? Math.max(0, this.state.buyer.grams - r.threshold) : Math.min(r.grams, this.state.buyer.grams);
+    if (g <= 0) return;
+    const val = g * p;
+    this.toast('⚡ Rule fired: AI detected €' + p + '/g. Executing pre-approved atomic redemption of ' + g + ' g → RLUSD via Batch…', 'violet');
+    await this.sleep(1400);
+    this.setState(st => ({
+      buyer: { ...st.buyer, grams: +(st.buyer.grams - g).toFixed(1), history: [...st.buyer.history, { ts: 'now', type: 'AUTO-REDEEM', grams: g, price: p }] },
+      feesEarned: st.feesEarned + Math.round(val * .0015)
+    }));
+    this.bumpDnft('Automation: pre-authorized redemption executed', {
+      lastEvent: { type: 'AUTO_REDEEM', grams: g, priceEUR: p, rail: 'RLUSD', atomic: 'Batch', ruleId: r.id, preApprovedByHolder: true }
+    });
+    this.pushTx('Auto-redeem ' + g + ' g → ' + this.eur(val) + ' RLUSD (rule ' + r.id + ')', 'Batch + MPT', 'tesSUCCESS', 'ai');
+    this.addAlert('reserve', 'Reserve released ' + g + ' g after automated redemption — coverage recomputed.');
+    this.toast('✓ Executed atomically. dNFT audit trail updated · reserve verified. TokenWald never touched keys or funds.', 'green');
+  }
+
+  // ── playground steps ─────────────────────
+  resetPg() {
+    if (this.state.live) fetch('/api/reset', { method: 'POST' }).catch(() => {});
+    this.setState(st => ({ pg: { active: 0, busy: false, done: [], vault: 0, minted: 0, feedConnected: false, euCred: false, dubaiCred: false, varaCred: false, holdings: { issuer: 0, eu: 0, dubai: 0, partner: 0 }, balances: { issuer: 0, eu: 0, dubai: 0 }, rlusd: { eu: 0, dubai: 0 }, dnft: [], ledger: [], stepNote: '', seededFrom: st.pg.seededFrom } }));
+  }
+  // Live mode: the backend executes REAL XRPL Testnet transactions and
+  // streams each one back as NDJSON the moment it validates on-ledger.
+  async liveStep(i) {
+    const body = {};
+    // Advisor seeding: size the REAL Testnet mint from the plan's Tranche 1.
+    const seeded = this.state.pg.seededFrom;
+    if (seeded && seeded.initialGrams > 0) body.mintGrams = Math.round(seeded.initialGrams);
+    if (i === 6) {
+      const rule = this.state.rules.find(r => r.status === 'armed' && (r.type === 'stop-loss' || r.type === 'take-profit'));
+      if (rule) { body.rule = rule; this.toast('📡 Reading YOUR rule from Dashboards: ' + rule.type + ' @ €' + rule.threshold + '/g, ' + rule.grams + ' g.', 'violet'); }
+    }
+    const res = await fetch('/api/step/' + i, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok || !res.body) throw new Error('backend unreachable');
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', failed = null, sawDone = false;
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+        if (!line) continue;
+        let ev; try { ev = JSON.parse(line); } catch (e) { continue; }
+        if (ev.kind === 'tx' || ev.kind === 'note') this.pushTx(ev.desc, ev.primitive, ev.result, ev.layer, ev.real, ev.hash ? (ev.hash.length > 20 ? ev.hash.slice(0, 6) + '…' + ev.hash.slice(-6) : ev.hash) : null, ev.explorer);
+        else if (ev.kind === 'patch') this.setPg(ev.patch);
+        else if (ev.kind === 'dnft') this.setState(st => { const v = st.pg.dnft.length ? st.pg.dnft[0].v + 1 : 0; return { pg: { ...st.pg, dnft: [{ v, note: ev.note, ts: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }), state: ev.state }, ...st.pg.dnft] } }; });
+        else if (ev.kind === 'toast') this.toast(ev.text, ev.tone);
+        else if (ev.kind === 'alert') this.addAlert(ev.layer, ev.text);
+        else if (ev.kind === 'error') failed = ev.message;
+        else if (ev.kind === 'done') sawDone = true;
+      }
+    }
+    if (failed) throw new Error(failed);
+    if (!sawDone) throw new Error('stream ended early');
+    if (i === 6 && this.state.rules.length) this.setState(st => ({ rules: st.rules.map(x => (x.status === 'armed' && (x.type === 'stop-loss' || x.type === 'take-profit')) ? { ...x, status: 'triggered', firedAt: 'via Sandbox (Testnet)' } : x) }));
+  }
+  async runStep(i) {
+    if (this.state.pg.busy || i !== this.state.pg.active) return;
+    this.setPg({ busy: true, stepNote: '' });
+    if (this.state.live) {
+      try {
+        await this.liveStep(i);
+        this.setState(st => ({ pg: { ...st.pg, busy: false, done: [...st.pg.done, i], active: Math.min(i + 1, 8) } }));
+        return;
+      } catch (err) {
+        this.toast('Live Testnet step failed (' + err.message + ') — falling back to simulation for this step.', 'red');
+      }
+    }
+    const S = this.sleep.bind(this);
+    const seededSim = this.state.pg.seededFrom;
+    const mintAmt = seededSim ? Math.max(1000, Math.min(Math.round(seededSim.initialGrams), 100000)) : 8000;
+    const shortVault = Math.round(mintAmt * .62);
+    const fullVault = Math.round(mintAmt * 1.25);
+    switch (i) {
+      case 0:
+        this.pushTx('Fund Issuer wallet · 1,000 XRP', 'Payment (faucet)', 'tesSUCCESS', 'domain'); await S(650);
+        this.pushTx('Fund BuyerEU wallet · 1,000 XRP', 'Payment (faucet)', 'tesSUCCESS', 'domain'); await S(650);
+        this.pushTx('Fund BuyerDubai wallet · 1,000 XRP', 'Payment (faucet)', 'tesSUCCESS', 'domain');
+        this.setPg({ balances: { issuer: 1000, eu: 1000, dubai: 1000 } });
+        this.toast('Dealer onboarded. Three testnet wallets funded — dealer keeps sole control of the issuer key.', 'gold');
+        break;
+      case 1:
+        this.pushTx('Connect custodian vault feed → reserve oracle', 'Price Oracle (XLS-47)', 'tesSUCCESS', 'reserve'); 
+        this.setPg({ feedConnected: true, vault: shortVault });
+        await S(900);
+        this.pushTx('Secure-mint pre-flight: ' + mintAmt.toLocaleString() + ' TWG vs ' + shortVault.toLocaleString() + ' g vaulted', 'Reserve check (pre-flight)', 'BLOCKED', 'reserve', false);
+        this.toast('⛔ Mint blocked: reserve coverage ' + Math.round(shortVault / mintAmt * 100) + '% < 100%. Proof-of-reserve gates every mint.', 'red');
+        await S(1600);
+        this.pushTx('Custodian top-up recorded: +' + (fullVault - shortVault).toLocaleString() + ' g → ' + fullVault.toLocaleString() + ' g vaulted', 'Price Oracle (XLS-47)', 'tesSUCCESS', 'reserve');
+        this.setPg({ vault: fullVault });
+        this.toast('Vault topped up. Coverage now ' + Math.round(fullVault / mintAmt * 100) + '% — mint unlocked for step d.', 'green');
+        break;
+      case 2:
+        this.pushTx('Create permissioned domain twg-gold-eu', 'Permissioned Domains (XLS-80)', 'tesSUCCESS', 'domain'); await S(750);
+        this.pushTx('Issue gold-kyc credential → BuyerEU', 'Credentials', 'tesSUCCESS', 'domain');
+        this.setPg({ euCred: true });
+        this.toast('Domain live. Only credentialed wallets can hold TWG — enforced by the ledger, not by policy documents.', 'gold');
+        break;
+      case 3:
+        this.pushTx('MPTokenIssuanceCreate · TWG (1 token = 1 g Au)', 'MPT', 'tesSUCCESS', 'domain'); await S(800);
+        this.pushTx('Mint ' + mintAmt.toLocaleString() + ' TWG — coverage check passed (' + Math.round(fullVault / mintAmt * 100) + '%)', 'MPT + reserve gate', 'tesSUCCESS', 'reserve');
+        this.setPg({ minted: mintAmt, holdings: { ...this.state.pg.holdings, issuer: mintAmt } });
+        this.toast(mintAmt.toLocaleString() + ' TWG minted, fully backed by ' + fullVault.toLocaleString() + ' g in the vault.', 'green');
+        break;
+      case 4:
+        this.pushTx('Mint compliance dNFT (Live Token)', 'Dynamic NFT (XLS-46)', 'tesSUCCESS', 'dnft');
+        this.bumpDnft('Live Token minted', {
+          asset: 'XAU · 1 token = 1 g', issuer: 'Dealer (principal)', domain: 'twg-gold-eu',
+          jurisdictions: this.state.compliance.jurisdictions,
+          regime: this.state.compliance.regime,
+          kycCredential: 'gold-kyc', reserveCoverage: Math.round(this.state.pg.vault / Math.max(this.state.pg.minted, 1) * 100) + '%',
+          transferPolicy: 'domain-gated', redemption: 'physical @ dealer · RLUSD/XRP via Batch'
+        });
+        this.toast('Live Token minted. Its compliance-state is now a living, on-ledger record — watch it version on the right.', 'gold');
+        break;
+      case 5:
+        this.pushTx('Transfer 100 TWG → BuyerDubai (no credential)', 'MPT + Domain gate', 'tecNO_AUTH', 'domain'); 
+        this.toast('⛔ tecNO_AUTH — BuyerDubai holds no gold-kyc credential. The ledger itself refused. Deterministic, not discretionary.', 'red');
+        await S(1700);
+        this.pushTx('Transfer 100 TWG → BuyerEU (gold-kyc ✓)', 'MPT + Domain gate', 'tesSUCCESS', 'domain');
+        this.setPg({ holdings: { ...this.state.pg.holdings, issuer: this.state.pg.holdings.issuer - 100, eu: 100 } });
+        this.bumpDnft('Holder added after credential check', { lastEvent: { type: 'TRANSFER', to: 'BuyerEU', grams: 100, gate: 'gold-kyc verified' }, holders: ['Issuer', 'BuyerEU'] });
+        this.toast('✓ Credentialed transfer settled. Same rules, opposite outcomes — that is the compliance gate.', 'green');
+        break;
+      case 6: {
+        let rule = this.state.rules.find(r => r.status === 'armed' && (r.type === 'stop-loss' || r.type === 'take-profit'));
+        let fromDash = !!rule;
+        if (!rule) rule = { id: 'demo', type: 'stop-loss', threshold: +(this.state.price - .3).toFixed(2), grams: 40 };
+        this.toast((fromDash ? '📡 Reading YOUR rule from Dashboards: ' : 'No dashboard rule armed — using demo default: ') + rule.type + ' @ €' + rule.threshold + '/g, ' + rule.grams + ' g.', 'violet');
+        await S(1500);
+        const target = rule.type === 'stop-loss' ? rule.threshold - .05 : rule.threshold + .05;
+        this.tick(target - this.state.price);
+        this.pushTx('AI agent: threshold crossed @ €' + this.state.price.toFixed(2) + '/g — proposing pre-approved redemption', 'Agent (simulated)', 'PROPOSED', 'ai', false);
+        await S(1200);
+        // Cap at 50 g so BuyerEU keeps enough for the step-h cross-border transfer.
+        const redeemG = Math.min(Math.max(1, Math.round(rule.grams) || 40), 50);
+        const capNote = redeemG < rule.grams ? ' (capped at 50 g for this demo lot)' : '';
+        this.pushTx('Redemption: BuyerEU returns ' + redeemG + ' TWG ⇄ receives ' + this.eur(redeemG * this.state.price) + ' in XRP (RLUSD rail in production)' + capNote, 'MPT + XRP settlement', 'tesSUCCESS', 'domain');
+        this.setPg({ holdings: { ...this.state.pg.holdings, eu: Math.max(0, this.state.pg.holdings.eu - redeemG), issuer: this.state.pg.holdings.issuer + redeemG }, rlusd: { ...this.state.pg.rlusd, eu: Math.round(redeemG * this.state.price) } });
+        if (fromDash) this.setState(st => ({ rules: st.rules.map(x => x.id === rule.id ? { ...x, status: 'triggered', firedAt: 'via Sandbox' } : x) }));
+        this.bumpDnft('Automated redemption — full trust-layer path', { lastEvent: { type: 'AUTO_REDEEM', grams: redeemG, priceEUR: this.state.price, path: 'AI proposed → holder pre-approved → Batch executed → dNFT recorded → reserve verified' } });
+        this.addAlert('reserve', 'Sandbox: ' + redeemG + ' g redeemed atomically — reserve ledger reconciled.');
+        this.toast('✓ Redemption complete: tokens back, XRP settled (RLUSD + atomic Batch on mainnet). No counterparty risk, no TokenWald custody.', 'green');
+        break;
+      }
+      case 7:
+        this.pushTx('Route intent: BuyerEU → BuyerDubai (cross-jurisdiction)', 'Agent (simulated)', 'FLAGGED', 'ai', false);
+        this.bumpDnft('Cross-jurisdiction routing flagged', { crossBorder: { destination: 'UAE / Dubai (VARA)', status: 'vara-recognition-pending' } });
+        this.addAlert('ai', 'VARA alert → BuyerDubai: recognition filing required before receiving TWG.');
+        this.addAlert('ai', 'DORA alert → Issuer: ICT third-party register update required for UAE custodian link.');
+        this.toast('dNFT flags VARA-recognition-pending. Alerts fired: VARA (buyer) + DORA (issuer). AI proposed the filings — humans must act.', 'violet');
+        await S(2100);
+        this.pushTx('BuyerDubai files: VARA recognition application · UBO declaration · custody & redemption policy · AML/CFT summary', 'Filing (simulated)', 'SUBMITTED', 'ai', false);
+        await S(1400);
+        this.pushTx('Issue vara-recognition credential → BuyerDubai', 'Credentials', 'tesSUCCESS', 'domain');
+        this.setPg({ dubaiCred: true, varaCred: true });
+        this.bumpDnft('Dubai policy recorded', { crossBorder: { destination: 'UAE / Dubai (VARA)', status: 'recognized', policy: 'investment-only — not cash-redeemable locally; physical redemption via issuer\u2019s licensed Dubai partner' } });
+        await S(1100);
+        this.pushTx('Transfer 50 TWG BuyerEU → BuyerDubai (vara-recognition ✓)', 'MPT + Domain gate', 'tesSUCCESS', 'domain');
+        this.setPg({ holdings: { ...this.state.pg.holdings, eu: Math.max(0, this.state.pg.holdings.eu - 50), dubai: 50 } });
+        await S(1500);
+        this.pushTx('Resale test: BuyerDubai → outside-domain wallet', 'MPT + Domain gate', 'tecNO_AUTH', 'domain');
+        this.toast('⛔ Resale outside the domain fails on-ledger — the Dubai restriction is enforced, not promised.', 'red');
+        await S(1600);
+        this.pushTx('Resale test: BuyerDubai → licensed Dubai partner (in-domain)', 'MPT + Domain gate', 'tesSUCCESS', 'domain');
+        this.setPg({ holdings: { ...this.state.pg.holdings, dubai: 25, partner: 25 } });
+        this.bumpDnft('Dubai resale restriction proven on-ledger', { lastEvent: { type: 'RESALE_TEST', outsideDomain: 'tecNO_AUTH', licensedPartner: 'tesSUCCESS' } });
+        this.toast('✓ Full lifecycle complete: mint → gate → automate → cross borders. One engine, every layer verified.', 'green');
+        break;
+    }
+    this.setState(st => ({ pg: { ...st.pg, busy: false, done: [...st.pg.done, i], active: Math.min(i + 1, 8) } }));
+  }
+
+  // ── copilot ──────────────────────────────
+  presetProfiles() {
+    return {
+      mica: {
+        jurisdiction: 'European Union', regulatoryRegime: 'MiCA — Title III ART, Art. 16(2) small-issuance exemption (< €5,000,000)',
+        tokenClassification: 'Asset-referenced token (single commodity, redeemable)',
+        holderEligibility: 'KYC-verified retail + professional investors in EU/EEA',
+        kycCredentialRequirements: ['gold-kyc (identity + AML screen)', 'EU residency attestation'],
+        transferRestrictions: 'Permissioned domain: EU-credentialed wallets only; no transfers to unverified addresses',
+        redemptionRestrictions: 'Physical redemption at dealer premises; cash-out in RLUSD/XRP via atomic Batch',
+        requiredFilings: ['MiCA white paper + Art. 16 notification to home NCA', 'Quarterly reserve attestation', 'DORA ICT third-party register'],
+        crossBorderRecognitionSteps: ['Passporting within EU/EEA automatic under MiCA', 'Non-EU: per-jurisdiction recognition required'],
+        riskFlags: ['Issuance value must stay < €5M or full ART authorization is required', 'Reserve attestations must be independently verifiable']
+      },
+      vara: {
+        jurisdiction: 'UAE — Dubai (VARA)', regulatoryRegime: 'VARA Virtual Assets & Related Activities Regulations 2023',
+        tokenClassification: 'Virtual asset (commodity-backed) — investment-only in Dubai',
+        holderEligibility: 'VARA-recognized investors; retail permitted with enhanced disclosure',
+        kycCredentialRequirements: ['gold-kyc', 'vara-recognition credential (post-filing)'],
+        transferRestrictions: 'In-domain transfers only; resale restricted to licensed Dubai partners',
+        redemptionRestrictions: 'NOT cash-redeemable locally — physical redemption via issuer\u2019s licensed Dubai partner only',
+        requiredFilings: ['VARA token recognition application', 'UBO declaration', 'Custody & redemption policy', 'AML/CFT program summary'],
+        crossBorderRecognitionSteps: ['File recognition pack with VARA', 'Appoint licensed local redemption partner', 'Record policy on Live Token dNFT'],
+        riskFlags: ['Local cash redemption prohibited without VASP license', 'Marketing to UAE retail requires VARA-compliant disclosures']
+      }
+    };
+  }
+  setCp(patch) { this.setState(st => ({ cp: { ...st.cp, ...patch } })); }
+  flat(v) {
+    if (v == null) return '';
+    if (Array.isArray(v)) return v.map(x => this.flat(x)).filter(Boolean).join(' · ');
+    if (typeof v === 'object') return Object.entries(v).map(([k, x]) => k + ': ' + this.flat(x)).join('; ');
+    return String(v);
+  }
+  normalizeProfile(p) {
+    const arrKeys = ['kycCredentialRequirements', 'requiredFilings', 'crossBorderRecognitionSteps', 'riskFlags'];
+    const out = {};
+    ['jurisdiction', 'regulatoryRegime', 'tokenClassification', 'holderEligibility', 'transferRestrictions', 'redemptionRestrictions'].forEach(k => { out[k] = this.flat(p[k]); });
+    arrKeys.forEach(k => {
+      const v = p[k];
+      out[k] = Array.isArray(v) ? v.map(x => this.flat(x)).filter(Boolean) : v ? [this.flat(v)] : [];
+    });
+    return out;
+  }
+  pickPreset(k) {
+    const texts = {
+      mica: 'Regulation (EU) 2023/1114 (MiCA), Title III: issuers of asset-referenced tokens shall be authorised… Art. 16(2): Title III shall not apply where the average outstanding value of the asset-referenced tokens never exceeds EUR 5 000 000…',
+      vara: 'Dubai Virtual Assets Regulatory Authority — Virtual Assets and Related Activities Regulations 2023: no Entity shall carry out any Virtual Asset Activity in the Emirate without a Licence… token recognition, UBO disclosure and AML/CFT program required…',
+      custom: ''
+    };
+    this.setCp({ preset: k, text: texts[k] || '', profile: null, applied: false, fileName: null, sent: false });
+  }
+  onFile(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    this.setCp({ fileName: f.name, preset: 'custom' });
+    if (/\.(txt|md|json)$/i.test(f.name)) {
+      const r = new FileReader();
+      r.onload = () => this.setCp({ text: String(r.result).slice(0, 12000) });
+      r.readAsText(f);
+    } else {
+      this.toast('PDF received — text layer extraction is simulated in this demo; paste key articles for best results.', 'violet');
+    }
+  }
+  async analyze() {
+    const { preset, text } = this.state.cp;
+    if (!text.trim() && !preset) { this.toast('Pick a preset or paste regulation text first.', 'red'); return; }
+    this.setCp({ analyzing: true, profile: null, applied: false, sent: false });
+    let profile = null, source = null;
+    if (text.trim().length > 40) {
+      try {
+        const res = await fetch('/api/copilot/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ preset, text })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        profile = this.normalizeProfile(data.profile);
+        source = 'Analyzed live by Claude Sonnet 5 (AI — proposes only)';
+      } catch (e) { profile = null; /* fall back to offline analysis below */ }
+    }
+    if (!profile) {
+      await this.sleep(1400);
+      const P = this.presetProfiles();
+      if (preset === 'mica') { profile = P.mica; }
+      else if (preset === 'vara') { profile = P.vara; }
+      else {
+        const t = text.toLowerCase();
+        profile = {
+          jurisdiction: 'Custom (extracted)', regulatoryRegime: /licen[cs]e|authoris/.test(t) ? 'Licensing/authorization regime detected' : 'Disclosure-based regime (no explicit licensing terms found)',
+          tokenClassification: /commodit|gold|metal/.test(t) ? 'Commodity-backed token' : 'Asset-referenced token (default)',
+          holderEligibility: /retail/.test(t) ? 'Retail permitted with disclosure' : 'Professional/qualified investors (conservative default)',
+          kycCredentialRequirements: ['gold-kyc'].concat(/aml|cft|launder/.test(t) ? ['enhanced-aml-screen'] : []),
+          transferRestrictions: /transfer|restrict/.test(t) ? 'Transfer restrictions detected — domain gating required' : 'Domain gating (default posture)',
+          redemptionRestrictions: /redeem|redemption/.test(t) ? 'Redemption terms detected — mirror locally on dNFT' : 'Physical redemption at dealer (default)',
+          requiredFilings: /prospectus|white ?paper|notif/.test(t) ? ['Disclosure document / white paper filing'] : ['Regulator notification (verify locally)'],
+          crossBorderRecognitionSteps: ['Local counsel review', 'Record recognition status on Live Token dNFT'],
+          riskFlags: ['Built-in keyword analysis — have counsel verify before applying']
+        };
+      }
+      source = 'Built-in analysis (offline fallback — labelled, not live AI)';
+    }
+    this.setCp({ analyzing: false, profile, source });
+    this.toast('Compliance profile drafted. Review the diff — nothing is enforced until you APPLY it.', 'violet');
+  }
+  applyProfile() {
+    const p = this.state.cp.profile; if (!p) return;
+    this.setState(st => ({
+      compliance: {
+        ...st.compliance,
+        jurisdictions: Array.from(new Set([...st.compliance.jurisdictions, p.jurisdiction])),
+        eligibility: p.holderEligibility,
+        credentials: Array.from(new Set([...st.compliance.credentials, ...(p.kycCredentialRequirements || [])])),
+        transferRestrictions: p.transferRestrictions,
+        redemption: p.redemptionRestrictions,
+        filings: Array.from(new Set([...st.compliance.filings, ...(p.requiredFilings || [])])),
+        riskFlags: p.riskFlags || []
+      },
+      cp: { ...st.cp, applied: true }
+    }));
+    this.addAlert('dnft', 'Copilot: destination-jurisdiction rules applied for ' + p.jurisdiction + ' — Live Token policy will version on next event.');
+    this.addAlert('ai', 'New filings queued from Copilot: ' + (p.requiredFilings || []).slice(0, 2).join(' · '));
+    if (this.state.pg.dnft.length) this.bumpDnft('Copilot applied ' + p.jurisdiction + ' profile', { jurisdictions: Array.from(new Set([...(this.state.pg.dnft[0].state.jurisdictions || []), p.jurisdiction])) });
+    this.toast('✓ Applied. Sandbox + Dashboards picked up the new jurisdiction rules. Enforcement stays on-ledger.', 'green');
+  }
+  sendDrafts() { this.setCp({ sent: true }); this.toast('Drafts sent to dealer/lawyer for approval. AI proposes — humans approve. Always.', 'violet'); }
+
+  // ── copilot brainstorm chat (Claude Sonnet 5) ──
+  setCpChat(patch) { this.setState(st => ({ cp: { ...st.cp, chat: { ...st.cp.chat, ...patch } } })); }
+  async cpChatSend() {
+    const chat = this.state.cp.chat;
+    if (chat.busy) return;
+    const text = (chat.input || '').trim();
+    if (!text) return;
+    const msgs = [...chat.messages, { role: 'user', content: text }];
+    this.setCpChat({ messages: msgs, input: '', busy: true });
+    try {
+      const res = await fetch('/api/copilot/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country: chat.country, messages: msgs })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      this.setCpChat({ messages: [...msgs, { role: 'assistant', content: data.reply }], busy: false });
+    } catch (e) {
+      this.setCpChat({ messages: [...msgs, { role: 'assistant', content: '⚠ ' + (e.message || 'Request failed') }], busy: false });
+    }
+  }
+
+  // ── advisor ──────────────────────────────
+  setAdv(k, ev) {
+    const v = ev && ev.target ? ev.target.value : ev;
+    // Any input change invalidates a Claude-modeled plan (revert to live estimate).
+    this.setState(st => ({ adv: { ...st.adv, aiPlan: null, [k]: (k === 'risk' || k === 'jurisdictions') ? v : parseFloat(v) || 0 } }));
+  }
+  toggleJur(j) {
+    this.setState(st => {
+      const has = st.adv.jurisdictions.includes(j);
+      return { adv: { ...st.adv, aiPlan: null, jurisdictions: has ? st.adv.jurisdictions.filter(x => x !== j) : [...st.adv.jurisdictions, j] } };
+    });
+  }
+  setRisk(r) { this.setState(st => ({ adv: { ...st.adv, aiPlan: null, risk: r } })); }
+  setAdvState(patch) { this.setState(st => ({ adv: { ...st.adv, ...patch } })); }
+  async genAdvisorAI() {
+    const a = this.state.adv;
+    if (a.aiBusy) return;
+    this.setAdvState({ aiBusy: true });
+    try {
+      const res = await fetch('/api/advisor/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vaultKg: a.vaultKg, spot: a.spot, monthlySales: a.monthlySales, kycPct: a.kycPct, jurisdictions: a.jurisdictions, risk: a.risk })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      this.setAdvState({ aiPlan: data.plan, aiBusy: false });
+      this.toast('✦ Plan modeled by Claude Sonnet 5. Cards, cap gauge and projection now reflect its recommendation.', 'violet');
+    } catch (e) {
+      this.setAdvState({ aiBusy: false });
+      this.toast('Claude plan failed: ' + (e.message || 'request error') + (/key/i.test(e.message || '') ? '' : ' — is ANTHROPIC_API_KEY set?'), 'red');
+    }
+  }
+  advComputeAI() {
+    const a = this.state.adv, pl = a.aiPlan, CAP = 5000000, spot = a.spot || 104;
+    const recG = pl.recG, recEUR = recG * spot;
+    const tranches = pl.tranches.map(t => ({ name: t.name, when: 'Month ' + t.month, pct: t.pct, grams: Math.round(recG * t.pct), eur: Math.round(recG * t.pct * spot) }));
+    const capPct = Math.min(100, recEUR / CAP * 100);
+    const months = 12, target = recEUR * pl.adoption, curve = f => Math.pow(f, 1.35);
+    const p50 = Array.from({ length: months }, (_, i) => Math.round(target * curve((i + 1) / months)));
+    const p90 = p50.map(v => Math.round(v * (1 + pl.volatility)));
+    const p10 = p50.map(v => Math.round(v * (1 - pl.volatility)));
+    return { recG, recEUR, tranches, capPct, coverG: Math.ceil(recG), tier: pl.tier, bps: Math.round(recEUR * .0025), mintsPerMo: 0, p10, p50, p90, flags: pl.riskFlags, capHeadroom: CAP - recEUR, rationale: pl.rationale, ai: true };
+  }
+  advCompute() {
+    const a = this.state.adv;
+    const key = JSON.stringify(a);
+    if (this._advKey === key) return this._advVal;
+    const CAP = 5000000;
+    const spot = a.spot || 104;
+    const vaultG = a.vaultKg * 1000;
+    const riskMul = { conservative: .45, balanced: .65, aggressive: .85 }[a.risk];
+    const capG = CAP / spot;
+    const demandG12 = (a.monthlySales * 12 * (a.kycPct / 100) * (riskMul + .15)) / spot;
+    const recG = Math.round(Math.min(capG * riskMul, vaultG * .6, Math.max(demandG12 * .4, 2000)));
+    const recEUR = recG * spot;
+    const tranches = [
+      { name: 'Tranche 1 — launch', when: 'Month 0', pct: .4 }, { name: 'Tranche 2 — traction', when: 'Month 4', pct: .35 }, { name: 'Tranche 3 — scale', when: 'Month 9', pct: .25 }
+    ].map(t => ({ ...t, grams: Math.round(recG * t.pct), eur: Math.round(recG * t.pct * spot) }));
+    const capPct = Math.min(100, recEUR / CAP * 100);
+    const coverG = Math.ceil(recG * 1.0);
+    const mintsPerMo = Math.max(1, Math.round(demandG12 / 12 / 250));
+    const tier = recEUR > 3200000 ? { name: 'Scale', fee: '€2,900/mo' } : recEUR > 1200000 ? { name: 'Growth', fee: '€1,200/mo' } : { name: 'Starter', fee: '€490/mo' };
+    const bps = Math.round(recEUR * .0025);
+    // monte carlo
+    const sims = 300, months = 12; const paths = [];
+    let seed = 42; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    for (let s = 0; s < sims; s++) {
+      let vol = 0; const p = [];
+      for (let m = 1; m <= months; m++) {
+        const adopt = (m / months) * (0.75 + rnd() * .7) * riskMul;
+        vol = Math.min(recG * spot * 1.15, vol + (recG / months) * adopt * spot * (0.85 + rnd() * .5));
+        p.push(vol);
+      }
+      paths.push(p);
+    }
+    const pct = q => Array.from({ length: months }, (_, m) => { const col = paths.map(p => p[m]).sort((x, y) => x - y); return col[Math.floor(q * sims)]; });
+    const flags = [];
+    if (recEUR > CAP * .92) flags.push('Recommended issuance is close to the €5M MiCA cap — split issuance or prepare full ART authorization.');
+    if (vaultG < recG) flags.push('Reserve coverage < 100% — vault holds ' + Math.round(vaultG).toLocaleString() + ' g but plan needs ' + coverG.toLocaleString() + ' g.');
+    if (a.kycPct < 25 && a.jurisdictions.length > 1) flags.push('KYC-ready share (' + a.kycPct + '%) is low for multi-jurisdiction distribution — run KYC onboarding first.');
+    if (a.jurisdictions.some(j => /dubai|vara|uae/i.test(j))) flags.push('Dubai/VARA selected: tokens are investment-only there — appoint a licensed local redemption partner.');
+    const val = { recG, recEUR, tranches, capPct, coverG, tier, bps, mintsPerMo, p10: pct(.1), p50: pct(.5), p90: pct(.9), flags, capHeadroom: CAP - recEUR };
+    this._advKey = key; this._advVal = val;
+    return val;
+  }
+  // ── marketplace ──────────────────────────
+  setMarket(patch) { this.setState(st => ({ market: { ...st.market, ...patch } })); }
+  setMarketRole(r) { this.setState({ marketRole: r }); }
+  marketSignup() {
+    const m = this.state.market;
+    if (!m.buyerName.trim()) { this.toast('Enter a name to open an account.', 'red'); return; }
+    this.setMarket({ signedUp: true });
+    this.toast('Account opened for ' + m.buyerName + '. Next: identity verification to receive your gold-kyc credential.', 'violet');
+  }
+  marketVerify() {
+    const m = this.state.market;
+    this.setMarket({ kyc: true });
+    this.addAlert('domain', 'Marketplace: gold-kyc credential issued to ' + m.buyerName + ' (' + m.jurisdiction + ') — admitted to the permissioned domain.');
+    this.toast('✓ Verified. gold-kyc credential issued on-ledger — you may now hold and buy TWG inside the domain.', 'green');
+  }
+  marketBuy() {
+    const m = this.state.market, price = this.state.price, g = +m.buyForm.grams || 0;
+    if (!m.kyc) { this.toast('⛔ tecNO_AUTH — this domain only admits gold-kyc-credentialed wallets. Verify your identity first.', 'red'); return; }
+    if (g <= 0) { this.toast('Enter a gram amount to buy.', 'red'); return; }
+    const entry = { buyer: m.buyerName, jur: m.jurisdiction, grams: g, price: +price.toFixed(2), ts: 'just now', cred: 'gold-kyc', hash: this.hash(), you: true };
+    this.setState(st => ({
+      market: { ...st.market, registry: [...st.market.registry, entry] },
+      buyer: { ...st.buyer, grams: +(st.buyer.grams + g).toFixed(1), history: [...st.buyer.history, { ts: 'now', type: 'BUY', grams: g, price: +price.toFixed(2) }] },
+      feesEarned: st.feesEarned + Math.round(g * price * .0025)
+    }));
+    this.addAlert('dnft', 'Marketplace primary sale: ' + g + ' g TWG → ' + m.buyerName + ' (' + m.jurisdiction + '), settled RLUSD via Batch.');
+    if (this.state.pg.dnft.length) this.bumpDnft('Marketplace primary sale', { lastEvent: { type: 'PRIMARY_SALE', to: m.buyerName, grams: g, priceEUR: +price.toFixed(2), rail: 'RLUSD', domainGated: true } });
+    this.toast('✓ Bought ' + g + ' g TWG for ' + this.eur(g * price) + ' (RLUSD, atomic). Recorded to the issuer registry and your portfolio.', 'green');
+  }
+
+  genPlan() {
+    // Seed from the Claude-modeled plan when one is active, else the live estimate.
+    const c = this.state.adv.aiPlan ? this.advComputeAI() : this.advCompute();
+    const t1 = (c.tranches && c.tranches[0] && c.tranches[0].grams) || Math.round(c.recG * .4);
+    this.setState(st => ({ advisorPlan: { initialGrams: t1, totalGrams: c.recG, p10: c.p10, p50: c.p50, p90: c.p90 }, pg: { ...st.pg, seededFrom: { initialGrams: t1 } }, view: 'playground' }));
+    if (this.state.adv.jurisdictions.some(j => /dubai|vara/i.test(j))) this.setCp({ preset: 'vara' });
+    this.toast('Plan generated. Sandbox pre-seeded with ' + Math.round(c.recG * .4).toLocaleString() + ' g initial mint; Copilot queued for your jurisdictions.', 'gold');
+  }
+
+  // ── chart helpers ────────────────────────
+  linePath(arr, w, h, min, max, close) {
+    if (!arr.length) return '';
+    const rx = w / (arr.length - 1 || 1), ry = h / ((max - min) || 1);
+    let d = arr.map((v, i) => (i ? 'L' : 'M') + (i * rx).toFixed(1) + ',' + (h - (v - min) * ry).toFixed(1)).join(' ');
+    if (close) d += ' L' + w + ',' + h + ' L0,' + h + ' Z';
+    return d;
+  }
+  bandPath(lo, hi, w, h, min, max) {
+    const rx = w / (lo.length - 1 || 1), ry = h / ((max - min) || 1);
+    const top = hi.map((v, i) => (i ? 'L' : 'M') + (i * rx).toFixed(1) + ',' + (h - (v - min) * ry).toFixed(1)).join(' ');
+    const bot = lo.slice().reverse().map((v, i) => 'L' + ((lo.length - 1 - i) * rx).toFixed(1) + ',' + (h - (v - min) * ry).toFixed(1)).join(' ');
+    return top + ' ' + bot + ' Z';
+  }
+
+  setView(v) { this.setState({ view: v }); window.scrollTo(0, 0); }
+  // Launch email list: saved server-side and forwarded to tokenwald@gmail.com;
+  // falls back to a prefilled email if the backend isn't running.
+  async joinWaitlist() {
+    const email = (this.state.waitEmail || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { this.toast('Enter a valid email address first.', 'red'); return; }
+    try {
+      const res = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      if (!res.ok) throw new Error('unavailable');
+      this.setState({ waitEmail: '' });
+      this.toast('✓ You are on the list! We will reach out from tokenwald@gmail.com when we launch.', 'green');
+    } catch (e) {
+      window.location.href = 'mailto:tokenwald@gmail.com?subject=' + encodeURIComponent('Join the TokenWald email list') + '&body=' + encodeURIComponent('Please add me to the launch list: ' + email);
+    }
+  }
+  setRuleForm(k, ev) { const v = ev.target.value; this.setState(st => ({ ruleForm: { ...st.ruleForm, [k]: v } })); }
+
+  pgVals(L) {
+    const st = this.state, pg = st.pg;
+    const layerName = { ai: 'AI PROPOSES', domain: 'LEDGER ENFORCES', dnft: 'dNFT RECORDS', reserve: 'RESERVE VERIFIES' };
+    const defs = [
+      { icon: 'a', title: 'Onboard dealer & fund wallets', layer: 'domain', primitive: 'Payment', real: true, desc: 'Create Issuer, BuyerEU and BuyerDubai testnet accounts and fund each with 1,000 XRP. The dealer is the principal — TokenWald never holds the keys.' },
+      { icon: 'b', title: 'Proof-of-Reserve: connect the vault', layer: 'reserve', primitive: 'Price Oracle (XLS-47)', real: true, desc: 'Wire the custodian vault feed into an on-ledger reserve oracle. Watch a secure mint get BLOCKED when vaulted grams don\u2019t cover the mint — then top up and unlock it.' },
+      { icon: 'c', title: 'Permissioned domain + KYC credential', layer: 'domain', primitive: 'XLS-80 + Credentials', real: true, desc: 'Create the twg-gold-eu domain and issue a gold-kyc credential to BuyerEU. From now on the ledger itself decides who may hold TWG.' },
+      { icon: 'd', title: 'Mint the gold token (1 TWG = 1 g)', layer: 'reserve', primitive: 'MPT', real: true, desc: 'Issue the Multi-Purpose Token, constrained by reserve coverage. Every gram minted is a gram in the vault.' },
+      { icon: 'e', title: 'Mint the Live Token (compliance dNFT)', layer: 'dnft', primitive: 'Dynamic NFT (XLS-46)', real: true, desc: 'A living, versioned compliance-state travels with the asset. Its JSON appears on the right — and every later event writes to it.' },
+      { icon: 'f', title: 'Compliance gate: fail, then pass', layer: 'domain', primitive: 'MPT + Domain gate', real: true, desc: 'Transfer to uncredentialed BuyerDubai fails with tecNO_AUTH. The identical transfer to credentialed BuyerEU settles. Deterministic enforcement.' },
+      { icon: 'g', title: 'Price-triggered auto-redeem', layer: 'ai', primitive: 'MPT + XRP settlement', real: true, desc: 'The agent watches the gold price and executes the holder\u2019s PRE-APPROVED rule: tokens return, settlement arrives in XRP (Testnet has no RLUSD; production settles in RLUSD via atomic Batch). Reads live rules you armed in Dashboards.' },
+      { icon: 'h', title: 'Cross-jurisdiction: Dubai / VARA', layer: 'dnft', primitive: 'Credentials + Domain', real: true, desc: 'Routing to Dubai flags VARA-recognition-pending, fires VARA + DORA alerts, files the recognition pack, then PROVES the resale restriction on-ledger: outside-domain fails, licensed partner succeeds.' }
+    ];
+    const pgSteps = defs.map((d, i) => {
+      const done = pg.done.includes(i), active = pg.active === i;
+      const lc = L[d.layer];
+      return {
+        ...d, isActive: active, busy: pg.busy, run: () => this.runStep(i),
+        status: done ? 'done' : active ? 'active' : 'locked',
+        cardBg: active ? 'var(--raised)' : 'var(--surface)',
+        cardBorder: active ? 'rgba(217,169,75,.4)' : done ? 'rgba(52,211,153,.22)' : 'rgba(var(--line),.07)',
+        opacity: done || active ? 1 : .45,
+        numBg: done ? 'rgba(52,211,153,.12)' : active ? 'rgba(217,169,75,.14)' : 'transparent',
+        numColor: done ? '#34d399' : active ? '#D9A94B' : '#5b6372',
+        numBorder: done ? 'rgba(52,211,153,.3)' : active ? 'rgba(217,169,75,.4)' : 'rgba(var(--line),.12)',
+        layerBg: lc + '1c', layerColor: lc, layerName: layerName[d.layer],
+        realTag: 'REAL XRPL', realBg: 'rgba(79,142,247,.13)', realColor: '#4f8ef7',
+        check: done ? '✅' : active ? '' : '🔒',
+        btnLabel: pg.busy ? 'Running…' : 'Run step ' + d.icon,
+        btnOpacity: pg.busy ? .55 : 1
+      };
+    });
+    const cov = pg.minted > 0 ? pg.vault / pg.minted * 100 : (pg.vault > 0 ? 100 : 0);
+    const covColor = pg.minted > 0 && cov < 100 ? '#f87171' : pg.vault > 0 ? '#34d399' : '#3a4150';
+    const latest = pg.dnft[0];
+    const resColors = { tesSUCCESS: '#34d399', tecNO_AUTH: '#f87171', BLOCKED: '#f87171', PROPOSED: '#a78bfa', FLAGGED: '#a78bfa', SUBMITTED: '#a78bfa' };
+    return {
+      restartPg: () => this.resetPg(),
+      seedBanner: pg.seededFrom ? 'Seeded from Tokenization Advisor — initial mint sized at ' + pg.seededFrom.initialGrams.toLocaleString() + ' g (Tranche 1 of your plan).' : false,
+      pgVaultStr: pg.vault.toLocaleString(), pgMintedStr: pg.minted.toLocaleString(),
+      covPctStr: pg.vault === 0 ? '— no feed' : Math.round(cov) + '%', covColor,
+      covBarW: Math.min(100, cov * .62) + '%',
+      pgHoldings: [
+        { name: 'Issuer', v: pg.holdings.issuer.toLocaleString() + ' TWG' },
+        { name: 'BuyerEU', v: pg.holdings.eu + ' TWG' + (pg.rlusd.eu ? ' · ' + this.eur(pg.rlusd.eu) + ' settled in XRP' : '') },
+        { name: 'BuyerDubai', v: pg.holdings.dubai + ' TWG' },
+        { name: 'Dubai partner', v: pg.holdings.partner + ' TWG' }
+      ],
+      pgSteps, pgAllDone: pg.done.length >= 8,
+      dnftV: latest ? 'v' + latest.v : 'not minted',
+      dnftJson: latest ? JSON.stringify(latest.state, null, 2) : '// Live Token not minted yet.\n// Run steps a–e to bring it to life.\n// Every subsequent event will\n// version this compliance-state.',
+      liveBadge: st.live ? 'LIVE · XRPL TESTNET' : 'SIMULATION · TESTNET-PARITY',
+      liveBadgeColor: st.live ? '#34d399' : 'var(--t3)',
+      liveBadgeBorder: st.live ? 'rgba(52,211,153,.4)' : 'rgba(var(--line),.12)',
+      liveSubtitle: st.live
+        ? 'Connected to XRPL Testnet: every step submits real transactions. Click any hash to verify it on testnet.xrpl.org.'
+        : 'Step through the full token lifecycle exactly as it runs on XRPL Testnet. Start the backend (npm start) to run it live on-chain.',
+      pgEmpty: pg.ledger.length === 0,
+      pgLedger: pg.ledger.map(tx => ({
+        ...tx, layerColor: L[tx.layer] || '#4f8ef7',
+        resColor: resColors[tx.result] || '#9aa2b1',
+        realTag: tx.onChain ? 'ON-CHAIN · TESTNET' : (tx.real ? 'REAL XRPL' : 'SIMULATED'),
+        realColor: tx.onChain ? '#34d399' : (tx.real ? '#4f8ef7' : '#a78bfa'),
+        explorerUrl: tx.explorer || 'javascript:void(0)',
+        hashLabel: tx.explorer ? tx.hash + ' ↗' : tx.hash,
+        hashColor: tx.explorer ? '#4f8ef7' : '#5b6372',
+        hashDeco: tx.explorer ? 'underline' : 'none'
+      }))
+    };
+  }
+
+  flowVals() {
+    const order = [
+      { view: 'advisor', n: '1', label: 'Plan', sub: 'Advisor', color: '#a78bfa' },
+      { view: 'copilot', n: '2', label: 'Configure', sub: 'Copilot', color: '#4f8ef7' },
+      { view: 'playground', n: '3', label: 'Simulate', sub: 'Sandbox', color: '#D9A94B' },
+      { view: 'market', n: '4', label: 'Trade', sub: 'Marketplace', color: '#f0abfc' },
+      { view: 'dash', n: '5', label: 'Monitor', sub: 'Dashboards', color: '#34d399' }
+    ];
+    const idx = order.findIndex(o => o.view === this.state.view);
+    const isFlow = idx >= 0;
+    const steps = order.map((o, i) => ({
+      ...o, go: () => this.setView(o.view), arrow: i < order.length - 1,
+      active: i === idx, done: i < idx,
+      pillBg: i === idx ? 'rgba(var(--line),.05)' : 'transparent',
+      circleBg: i === idx ? o.color : i < idx ? o.color + '22' : 'transparent',
+      circleColor: i === idx ? '#0f1115' : i < idx ? o.color : '#5b6372',
+      circleBorder: i <= idx ? o.color : 'rgba(var(--line),.14)',
+      labelColor: i === idx ? '#e8eaf0' : '#8b93a3',
+      mark: i < idx ? '✓' : o.n
+    }));
+    const next = order[idx + 1];
+    return {
+      isFlow, flowSteps: steps,
+      flowNext: next ? () => this.setView(next.view) : () => this.setView('advisor'),
+      flowNextLabel: next ? 'Continue to ' + next.sub + ' →' : 'Restart flow ↺'
+    };
+  }
+
+  landingVals() {
+    const no = { t: '✗', c: '#f87171' }, yes = { t: '✓', c: '#34d399' }, part = { t: '◐', c: 'var(--gold)' };
+    const rows = [
+      ['Redeemable for physical gold', part, part, yes],
+      ['Self-custody', no, no, yes],
+      ['Portable across venues', yes, no, yes],
+      ['Local-dealer trust', no, part, no],
+      ['Live proof of reserve', no, no, part],
+      ['Cross-jurisdiction recognition', part, no, no]
+    ];
+    return {
+      engineLayers: [
+        { verb: 'AI PROPOSES', title: 'Agentic AI', desc: 'Regulation-aware automation. Drafts compliance, surfaces cross-jurisdiction requirements. Never enforces.', prim: 'copilot · simulated/AI', color: '#a78bfa', delay: '0s', arrow: true },
+        { verb: 'LEDGER ENFORCES', title: 'Permissioned Domain', desc: 'Deterministic on-ledger gating of who may hold and transact. tecNO_AUTH is not a policy — it\u2019s physics.', prim: 'XLS-80 + Credentials · real', color: '#4f8ef7', delay: '.55s', arrow: true },
+        { verb: 'dNFT RECORDS', title: 'Live Token', desc: 'A dynamic NFT carrying living compliance-state and a cross-jurisdiction audit trail, versioned on every event.', prim: 'Dynamic NFT (XLS-46) · real', color: '#D9A94B', delay: '1.1s', arrow: true },
+        { verb: 'RESERVE VERIFIES', title: 'Proof of Reserve', desc: 'Real-time on-chain verification that vaulted gold backs tokens 1:1 — minting is blocked without it.', prim: 'Price Oracle (XLS-47) · real', color: '#34d399', delay: '1.65s', arrow: false }
+      ],
+      productItems: [
+        { icon: '⛏', title: 'One-click mint', desc: '1 token = 1 gram, reserve-gated MPT issuance.', color: '#D9A94B' },
+        { icon: '🔍', title: 'Proof-of-reserve', desc: 'Custodian feed → on-ledger oracle, verified live.', color: '#34d399' },
+        { icon: '🛂', title: 'Permissioned domain', desc: 'Only KYC-credentialed wallets can hold or trade.', color: '#4f8ef7' },
+        { icon: '🧬', title: 'Live compliance dNFT', desc: 'Versioned compliance-state that travels with the asset.', color: '#D9A94B' },
+        { icon: '✦', title: 'Agentic AI assistant', desc: 'Drafts filings and jurisdiction configs — proposes only.', color: '#a78bfa' },
+        { icon: '⇄', title: 'RLUSD settlement', desc: 'Atomic redemption via Batch — tokens out, cash in, one tx.', color: '#4f8ef7' },
+        { icon: '🛍', title: 'Permissioned marketplace', desc: 'A gated storefront: KYC-verified buyers self-serve; every sale hits the registry.', color: '#f0abfc' },
+        { icon: '📊', title: 'Investor dashboards', desc: 'Issuer and buyer views with live automation rules.', color: '#a78bfa' }
+      ],
+      compareRows: rows.map(r => ({ label: r[0], c1: r[1].t, c1c: r[1].c, c2: r[2].t, c2c: r[2].c, c3: r[3].t, c3c: r[3].c })),
+      roadmap: [
+        { n: '1', icon: '🥇', title: 'Gold', desc: 'Live prototype on XRPL Testnet. Trusted dealers issue redeemable, vault-backed gram tokens.', changes: 'Nothing — this is the wedge.', now: true, accent: 'var(--gold)', dotBg: 'rgba(217,169,75,.15)', dotBorder: '#D9A94B', cardBg: 'var(--raised)', cardBorder: 'rgba(217,169,75,.35)', delay: '0s' },
+        { n: '2', icon: '🥈', title: 'Silver & precious metals', desc: 'Same engine, new asset-class configs for silver, platinum, palladium.', changes: 'Asset config · custodian oracle feed · purity standards.', now: false, accent: '#c6cdda', dotBg: 'var(--surface)', dotBorder: 'rgba(var(--line),.25)', cardBg: 'var(--surface)', cardBorder: 'rgba(var(--line),.09)', delay: '.12s' },
+        { n: '3', icon: '🏗', title: 'Physical commodities', desc: 'Industrial metals and agri — warehoused, graded, redeemable.', changes: 'Asset config · warehouse oracle feeds · jurisdiction packs.', now: false, accent: '#c6cdda', dotBg: 'var(--surface)', dotBorder: 'rgba(var(--line),.25)', cardBg: 'var(--surface)', cardBorder: 'rgba(var(--line),.09)', delay: '.24s' },
+        { n: '4', icon: '🌿', title: 'Environmental certificates', desc: 'Registry-backed certificates with the same proof-of-reserve discipline. Later.', changes: 'Registry oracle · certificate lifecycle · retirement rules.', now: false, accent: '#c6cdda', dotBg: 'var(--surface)', dotBorder: 'rgba(var(--line),.25)', cardBg: 'var(--surface)', cardBorder: 'rgba(var(--line),.09)', delay: '.36s' }
+      ]
+    };
+  }
+
+  advVals() {
+    const a = this.state.adv, c = a.aiPlan ? this.advComputeAI() : this.advCompute();
+    const fields = [
+      { k: 'vaultKg', label: 'Vault gold on hand', hint: 'kg', value: a.vaultKg },
+      { k: 'spot', label: 'Gold spot price', hint: '€ / g', value: a.spot },
+      { k: 'monthlySales', label: 'Avg monthly retail gold sales', hint: '€', value: a.monthlySales },
+      { k: 'kycPct', label: 'Customers already KYC-ready', hint: '%', value: a.kycPct }
+    ].map(f => ({ ...f, set: (e) => this.setAdv(f.k, e) }));
+    const jurs = ['EU / MiCA', 'Germany', 'Austria', 'UAE — Dubai / VARA'].map(jn => {
+      const on = a.jurisdictions.includes(jn);
+      return { label: jn, toggle: () => this.toggleJur(jn), bg: on ? 'rgba(79,142,247,.14)' : 'transparent', border: on ? 'rgba(79,142,247,.5)' : 'rgba(var(--line),.13)', color: on ? '#7fadf9' : '#8b93a3' };
+    });
+    const risks = ['conservative', 'balanced', 'aggressive'].map(rk => ({
+      label: rk[0].toUpperCase() + rk.slice(1), pick: () => this.setRisk(rk),
+      bg: a.risk === rk ? 'rgba(217,169,75,.15)' : 'transparent', color: a.risk === rk ? 'var(--gold)' : 'var(--t3)'
+    }));
+    const upMax = c.p90[11] * 1.08;
+    const maxT = Math.max(...c.tranches.map(t => t.grams), 1);
+    return {
+      advFields: fields, advJurs: jurs, advRisks: risks,
+      advGen: () => this.genPlan(),
+      advRecG: c.recG.toLocaleString(), advRecEUR: this.eur(c.recEUR),
+      advCoverG: c.coverG.toLocaleString(),
+      advTier: c.tier.name, advTierFee: c.tier.fee, advBps: this.eur(c.bps),
+      advCapPct: c.capPct.toFixed(1) + '%', advCapW: c.capPct + '%',
+      advCapColor: c.capPct > 92 ? '#f87171' : c.capPct > 75 ? 'var(--gold)' : '#34d399',
+      advHeadroom: this.eur(c.capHeadroom),
+      advTranches: c.tranches.map(t => ({ ...t, gStr: t.grams.toLocaleString(), eStr: this.eur(t.eur), barW: Math.round(t.grams / maxT * 100) + '%' })),
+      advBand: this.bandPath(c.p10, c.p90, 340, 130, 0, upMax),
+      advP50Line: this.linePath(c.p50, 340, 130, 0, upMax),
+      advP10Line: this.linePath(c.p10, 340, 130, 0, upMax),
+      advP90Line: this.linePath(c.p90, 340, 130, 0, upMax),
+      advP90: this.eur(c.p90[11]), advP50: this.eur(c.p50[11]), advP10: this.eur(c.p10[11]),
+      advHasFlags: c.flags.length > 0, advFlags: c.flags.map(t => ({ t })),
+      // Claude modeling
+      advGenAI: () => this.genAdvisorAI(),
+      advAiBusy: a.aiBusy,
+      advAiBtnLabel: a.aiBusy ? 'Modeling with Claude Sonnet 5…' : (a.aiPlan ? '✦ Re-model with Claude Sonnet 5' : '✦ Model this plan with Claude Sonnet 5'),
+      advAiBtnOp: a.aiBusy ? .55 : 1,
+      advIsAI: !!a.aiPlan,
+      advModeBadge: a.aiPlan ? 'MODELED BY CLAUDE SONNET 5' : 'SIMULATED · ADVISORY ONLY',
+      advSimsBadge: a.aiPlan ? 'CLAUDE-MODELED' : '300 SIMS',
+      advHasRationale: !!(c.rationale && c.rationale.trim()),
+      advRationale: c.rationale || ''
+    };
+  }
+
+  cpVals() {
+    const cp = this.state.cp, cur = this.state.compliance, p = cp.profile;
+    const j = (x) => Array.isArray(x) ? x.join(' · ') : (x || '—');
+    const chat = cp.chat || { country: '', input: '', messages: [], busy: false };
+    const chatMsgs = chat.messages.map(m => {
+      const mine = m.role === 'user';
+      return {
+        text: m.content,
+        align: mine ? 'flex-end' : 'flex-start',
+        bg: mine ? 'rgba(167,139,250,.12)' : 'var(--surface2)',
+        border: mine ? 'rgba(167,139,250,.3)' : 'rgba(var(--line),.09)',
+        color: mine ? '#e8eaf0' : 'var(--t2)'
+      };
+    });
+    const presets = [
+      { k: 'mica', label: '🇪🇺 EU / MiCA' }, { k: 'vara', label: '🇦🇪 UAE — Dubai / VARA' }, { k: 'custom', label: '✎ Custom (blank)' }
+    ].map(x => ({
+      ...x, pick: () => this.pickPreset(x.k),
+      bg: cp.preset === x.k ? 'rgba(167,139,250,.14)' : 'transparent',
+      border: cp.preset === x.k ? 'rgba(167,139,250,.5)' : 'rgba(var(--line),.13)',
+      color: cp.preset === x.k ? '#c4b5fd' : '#9aa2b1'
+    }));
+    let rows = [], diff = [], docs = [], docTitle = '', docLines = [];
+    if (p) {
+      rows = [
+        ['JURISDICTION', p.jurisdiction], ['REGULATORY REGIME', p.regulatoryRegime], ['TOKEN CLASSIFICATION', p.tokenClassification],
+        ['HOLDER ELIGIBILITY', p.holderEligibility], ['KYC CREDENTIALS', j(p.kycCredentialRequirements)], ['TRANSFER RESTRICTIONS', p.transferRestrictions],
+        ['REDEMPTION RESTRICTIONS', p.redemptionRestrictions], ['REQUIRED FILINGS', j(p.requiredFilings)],
+        ['CROSS-BORDER RECOGNITION', j(p.crossBorderRecognitionSteps)], ['RISK FLAGS', j(p.riskFlags)]
+      ].map(r => ({ label: r[0], value: r[1] || '—' }));
+      diff = [
+        { field: 'JURISDICTIONS ON LIVE TOKEN', from: cur.jurisdictions.join(' · '), to: Array.from(new Set([...cur.jurisdictions, p.jurisdiction])).join(' · ') },
+        { field: 'HOLDER ELIGIBILITY', from: cur.eligibility, to: p.holderEligibility },
+        { field: 'DOMAIN CREDENTIALS REQUIRED', from: cur.credentials.join(' · '), to: Array.from(new Set([...cur.credentials, ...(p.kycCredentialRequirements || [])])).join(' · ') },
+        { field: 'TRANSFER RESTRICTIONS', from: cur.transferRestrictions, to: p.transferRestrictions },
+        { field: 'REDEMPTION POLICY', from: cur.redemption, to: p.redemptionRestrictions },
+        { field: 'FILINGS QUEUE', from: cur.filings.join(' · '), to: Array.from(new Set([...cur.filings, ...(p.requiredFilings || [])])).join(' · ') }
+      ].filter(d => d.from !== d.to);
+      const isVara = /vara|dubai|uae/i.test(p.jurisdiction || '');
+      const docDefs = [
+        { title: 'MiCA white-paper outline', lines: ['Part A — Issuer: dealer identity, Luxembourg S.à r.l., governance', 'Part B — Token: TWG, 1 token = 1 g Au, redeemable, no yield', 'Part C — Rights & obligations: physical redemption, RLUSD cash-out', 'Part D — Reserve: custodian, XLS-47 oracle attestation, 1:1 coverage', 'Part E — Risks: market, custody (dealer-side), technology', 'Art. 16(2) note: outstanding value kept < €5,000,000'] },
+        { title: 'Cross-border alert notice', lines: ['To: ' + (p.jurisdiction || 'destination') + ' holders & issuer compliance', 'Trigger: routing intent to a new jurisdiction detected', 'Buyer action: ' + j(p.crossBorderRecognitionSteps), 'Issuer action: DORA ICT third-party register update', 'Status recorded on Live Token: recognition-pending → recognized'] },
+        { title: isVara ? 'VARA filing checklist' : 'Local filing checklist', lines: (p.requiredFilings || []).map(f => '☐ ' + f).concat(['☐ Appoint licensed local redemption partner', '☐ Record final policy on the Live Token dNFT']) }
+      ];
+      docs = docDefs.map((d, i) => ({
+        title: d.title, pick: () => this.setCp({ doc: i }),
+        bg: cp.doc === i ? 'rgba(var(--line),.07)' : 'transparent',
+        color: cp.doc === i ? '#e8eaf0' : '#8b93a3'
+      }));
+      const cd = docDefs[cp.doc] || docDefs[0];
+      docTitle = cd.title;
+      docLines = cd.lines.map((t, i) => ({ b: (i + 1) + '.', t }));
+    }
+    return {
+      cpPresets: presets,
+      cpText: cp.text, cpSetText: (e) => this.setCp({ text: e.target.value }),
+      cpFile: (e) => this.onFile(e),
+      cpFileName: cp.fileName ? '· ' + cp.fileName : '(or use the paste box)',
+      cpAnalyze: () => this.analyze(), cpAnalyzing: cp.analyzing,
+      cpBtnLabel: cp.analyzing ? 'Analyzing…' : '✦ Analyze & draft compliance profile',
+      cpBtnOp: cp.analyzing ? .55 : 1,
+      cpIdle: !cp.analyzing && !p, cpHasProfile: !!p && !cp.analyzing,
+      cpSource: cp.source || '',
+      cpRows: rows, cpDiff: diff,
+      cpApply: () => this.applyProfile(), cpApplied: cp.applied,
+      cpApplyLabel: cp.applied ? '✓ Applied to app state' : 'Apply to Live Token + domain',
+      cpApplyBg: cp.applied ? '#34d399' : 'linear-gradient(135deg,#D9A94B,#C09540)',
+      cpDocs: docs, cpDocTitle: docTitle, cpDocLines: docLines,
+      cpSend: () => this.sendDrafts(),
+      cpSendLabel: cp.sent ? '✓ Sent — awaiting human approval' : 'Send to dealer/lawyer for approval',
+      cpSendBg: cp.sent ? 'rgba(167,139,250,.15)' : 'transparent',
+      // brainstorm chat
+      cpChatCountry: chat.country,
+      cpChatSetCountry: (e) => this.setCpChat({ country: e.target.value }),
+      cpChatInput: chat.input,
+      cpChatSetInput: (e) => this.setCpChat({ input: e.target.value }),
+      cpChatKey: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.cpChatSend(); } },
+      cpChatSend: () => this.cpChatSend(),
+      cpChatMsgs: chatMsgs,
+      cpChatEmpty: chat.messages.length === 0,
+      cpChatHasMsgs: chat.messages.length > 0,
+      cpChatBusy: chat.busy,
+      cpChatBtnLabel: chat.busy ? '…' : 'Send',
+      cpChatBtnOp: chat.busy ? .55 : 1
+    };
+  }
+
+  marketVals() {
+    const st = this.state, m = st.market, price = st.price;
+    const sold = m.registry.reduce((a, b) => a + b.grams, 0);
+    const buyers = new Set(m.registry.map(r => r.buyer)).size;
+    const revenue = m.registry.reduce((a, b) => a + b.grams * b.price, 0);
+    const byJur = {};
+    m.registry.forEach(r => { byJur[r.jur] = (byJur[r.jur] || 0) + r.grams; });
+    const jurColors = { 'Germany': '#D9A94B', 'Austria': '#4f8ef7', 'France': '#a78bfa', 'Luxembourg': '#34d399', 'UAE — Dubai': '#f0abfc', 'EU / MiCA': '#D9A94B' };
+    const jurRows = Object.entries(byJur).sort((a, b) => b[1] - a[1]).map(([name, g]) => ({ name, g: g.toLocaleString(), pct: Math.round(g / sold * 100), barW: Math.round(g / sold * 100) + '%', color: jurColors[name] || '#8b93a3' }));
+    const grams = +m.buyForm.grams || 0, cost = grams * price;
+    const stage = !m.signedUp ? 'signup' : !m.kyc ? 'verify' : 'shop';
+    const jurOpts = ['EU / MiCA', 'Germany', 'Austria', 'France', 'UAE — Dubai'];
+    return {
+      isBuyerMode: st.marketRole === 'buyer', isIssuerMode: st.marketRole === 'issuer',
+      setMktBuyer: () => this.setMarketRole('buyer'), setMktIssuer: () => this.setMarketRole('issuer'),
+      mktBuyerBg: st.marketRole === 'buyer' ? 'rgba(217,169,75,.14)' : 'transparent', mktBuyerColor: st.marketRole === 'buyer' ? 'var(--gold)' : 'var(--t3)',
+      mktIssuerBg: st.marketRole === 'issuer' ? 'rgba(217,169,75,.14)' : 'transparent', mktIssuerColor: st.marketRole === 'issuer' ? 'var(--gold)' : 'var(--t3)',
+      mStage: stage, mIsSignup: stage === 'signup', mIsVerify: stage === 'verify', mIsShop: stage === 'shop',
+      mSignedUpDot: m.signedUp ? '#34d399' : '#D9A94B',
+      mKycDot: m.kyc ? '#34d399' : (m.signedUp ? '#D9A94B' : 'var(--t5)'),
+      mShopDot: m.kyc ? '#D9A94B' : 'var(--t5)',
+      kycChecklist: ['Government ID + proof of address', 'AML / sanctions screening', 'Jurisdiction eligibility (' + m.jurisdiction + ')', 'Wallet linked to gold-kyc credential'],
+      mBuyerName: m.buyerName, mJur: m.jurisdiction, jurOpts,
+      onMBuyerName: (e) => this.setMarket({ buyerName: e.target.value }),
+      onMJur: (e) => this.setMarket({ jurisdiction: e.target.value }),
+      doSignup: () => this.marketSignup(), doVerify: () => this.marketVerify(), doBuy: () => this.marketBuy(),
+      mBuyGrams: m.buyForm.grams, onMBuyGrams: (e) => this.setMarket({ buyForm: { grams: e.target.value } }),
+      mPrice: price.toFixed(2), mCost: this.eur(cost), mRlusd: this.eur(cost),
+      mSold: sold.toLocaleString(), mBuyers: buyers, mRevenue: this.eur(revenue), mJurRows: jurRows,
+      mCoverage: Math.round((38900 + st.pg.vault) / (sold || 1) * 100),
+      mRegistry: m.registry.slice().reverse().map(r => ({
+        ...r, valStr: this.eur(r.grams * r.price), gStr: r.grams.toLocaleString(),
+        rowBg: r.you ? 'rgba(217,169,75,.06)' : 'transparent',
+        credColor: r.cred === 'gold-kyc' ? '#34d399' : '#f0abfc'
+      }))
+    };
+  }
+
+  dashVals(L) {
+    const st = this.state, price = st.price;
+    const youSold = st.market.registry.filter(r => r.you).reduce((a, b) => a + b.grams, 0);
+    const tokenized = 33500 + st.pg.minted + youSold, vault = 38900 + st.pg.vault;
+    const cov = vault / tokenized * 100;
+    const capUsed = tokenized * price, capPct = Math.min(100, capUsed / 5000000 * 100);
+    // synthetic histories
+    const N = 40;
+    const supply = Array.from({ length: N }, (_, i) => 8000 + (tokenized - 8000) * Math.pow(i / (N - 1), 1.6));
+    const covSer = Array.from({ length: N }, (_, i) => {
+      const base = 112 + Math.sin(i * .7) * 8 + (i === 22 ? -18 : 0) + (i === 23 ? -14 : 0);
+      return i >= N - 2 ? cov : base;
+    });
+    const covMin = 85, covMax = 135, ch = 120, cw = 340;
+    const y100 = ch - (100 - covMin) / (covMax - covMin) * ch;
+    const holders = [
+      { name: 'Germany', v: 98, color: '#D9A94B' }, { name: 'Austria', v: 45, color: '#4f8ef7' },
+      { name: 'France', v: 26, color: '#a78bfa' }, { name: 'Luxembourg', v: 19, color: '#34d399' },
+      { name: 'UAE', v: st.pg.holdings.dubai > 0 ? 27 : 26, color: '#f0abfc' }
+    ];
+    const hTot = holders.reduce((a, b) => a + b.v, 0);
+    const C = 2 * Math.PI * 54; let acc = 0;
+    const donut = holders.map(h => {
+      const len = h.v / hTot * C, seg = { ...h, pct: Math.round(h.v / hTot * 100), dash: len.toFixed(1) + ' ' + C.toFixed(1), off: (-acc).toFixed(1) };
+      acc += len; return seg;
+    });
+    const iss = [3800, 5200, 4100, 6300, 5600, 7200, 6800, st.pg.minted > 0 ? 8600 : 7400];
+    const red = [400, 600, 900, 700, 1200, 800, 1400, 1650];
+    const bMax = 9000, bw = 340, bh = 120, slot = bw / 8;
+    const bars = iss.map((v, i) => ({
+      label: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i],
+      x: (i * slot + 6).toFixed(1), xr: (i * slot + 6 + 13).toFixed(1), lx: (i * slot + slot / 2).toFixed(1),
+      yI: (bh - v / bMax * bh).toFixed(1), hI: (v / bMax * bh).toFixed(1),
+      yR: (bh - red[i] / bMax * bh).toFixed(1), hR: (red[i] / bMax * bh).toFixed(1)
+    }));
+    // uptake vs advisor bands
+    const adv = this.advCompute();
+    const upMax = adv.p90[11] * 1.08;
+    const actual = adv.p50.slice(0, 6).map((v, i) => v * (0.82 + i * .045));
+    // buyer
+    const b = st.buyer, val = b.grams * price, cost = b.grams * b.basis, pl = val - cost;
+    const ser = st.series.slice(-80);
+    const sMin = Math.min(...ser) - .3, sMax = Math.max(...ser) + .3;
+    const fanM = Array.from({ length: 13 }, (_, m) => m);
+    const f10 = fanM.map(m => b.grams * price * (1 - .11 * m / 12));
+    const f50 = fanM.map(m => b.grams * price * (1 + .035 * m / 12));
+    const f90 = fanM.map(m => b.grams * price * (1 + .16 * m / 12));
+    const fMin = f10[12] * .96, fMax = f90[12] * 1.03;
+    const typeNames = { 'stop-loss': 'Stop-loss auto-redeem', 'take-profit': 'Take-profit auto-redeem', 'alert': 'Price alert (notify only)', 'rebalance': 'Auto-rebalance cap' };
+    const stColors = { armed: '#a78bfa', triggered: '#34d399', paused: '#5b6372' };
+    const layerColors = { ai: '#a78bfa', domain: '#4f8ef7', dnft: '#D9A94B', reserve: '#34d399' };
+    return {
+      showFeedControls: this.props.demoControls ?? true,
+      isIssuer: st.role === 'issuer', isBuyer: st.role === 'buyer',
+      setIssuer: () => this.setState({ role: 'issuer' }), setBuyer: () => this.setState({ role: 'buyer' }),
+      issuerBg: st.role === 'issuer' ? 'rgba(217,169,75,.14)' : 'transparent', issuerColor: st.role === 'issuer' ? 'var(--gold)' : 'var(--t3)',
+      buyerBg: st.role === 'buyer' ? 'rgba(217,169,75,.14)' : 'transparent', buyerColor: st.role === 'buyer' ? 'var(--gold)' : 'var(--t3)',
+      dip: () => this.tick(-0.55), spike: () => this.tick(0.55),
+      // issuer KPIs
+      dKpis: [
+        { label: 'GRAMS TOKENIZED', v: tokenized.toLocaleString() + ' g', sub: this.eur(capUsed) + ' notional', c: 'var(--gold)' },
+        { label: 'GRAMS IN VAULT', v: vault.toLocaleString() + ' g', sub: 'custodian oracle · live', c: '#34d399' },
+        { label: 'RESERVE COVERAGE', v: cov.toFixed(1) + '%', sub: '≥100% enforced at mint', c: cov >= 100 ? '#34d399' : '#f87171' },
+        { label: 'IN CIRCULATION', v: Math.round(tokenized * .94).toLocaleString() + ' TWG', sub: hTot + ' holders · 5 jurisdictions', c: '#4f8ef7' },
+        { label: 'MiCA CAP USED', v: capPct.toFixed(1) + '%', sub: capUsed > 5000000 ? '⚠ cap exceeded → full ART authorization required' : this.eur(5000000 - capUsed) + ' headroom of €5M', c: capPct > 92 ? '#f87171' : 'var(--gold)' },
+        { label: 'FEES EARNED', v: this.eur(st.feesEarned), sub: 'SaaS + 25 bps issuance', c: '#a78bfa' }
+      ],
+      supplyArea: this.linePath(supply, 340, 120, 0, tokenized * 1.1, true),
+      supplyLine: this.linePath(supply, 340, 120, 0, tokenized * 1.1),
+      covLine: this.linePath(covSer, cw, ch, covMin, covMax),
+      covY100: y100.toFixed(1), covDangerH: (ch - y100).toFixed(1),
+      donutSegs: donut, holdersTotal: hTot,
+      bars,
+      upBand: this.bandPath(adv.p10, adv.p90, 340, 120, 0, upMax),
+      upP50: this.linePath(adv.p50, 340, 120, 0, upMax),
+      upActual: this.linePath(actual, 340 * (6 / 12), 120, 0, upMax),
+      upMaxStr: this.eur(upMax),
+      hasPlan: !!st.advisorPlan,
+      pauseLabel: st.issuancePaused ? 'Issuance PAUSED — resume' : 'Pause new issuance',
+      pauseBg: st.issuancePaused ? 'rgba(248,113,113,.14)' : 'rgba(var(--line),.04)',
+      pauseColor: st.issuancePaused ? '#f87171' : '#dbe0ea',
+      togglePause: () => { const p = !st.issuancePaused; this.setState({ issuancePaused: p }); this.addAlert('domain', p ? 'Issuer paused new issuance — AI proposals queue until resumed.' : 'Issuance resumed by dealer.'); this.toast(p ? 'Issuance paused. AI proposes, the dealer disposes.' : 'Issuance resumed.', p ? 'red' : 'green'); },
+      topUp: () => { this.setPg({ vault: st.pg.vault + 1000 }); this.addAlert('reserve', 'Reserve top-up simulated: +1,000 g — coverage recomputed on-chain.'); this.toast('+1,000 g added to vault feed. Coverage updates everywhere, including the Sandbox.', 'green'); },
+      dAlerts: st.alerts.map(a => ({ ...a, color: layerColors[a.layer] || '#8b93a3' })),
+      // buyer
+      bKpis: [
+        { label: 'GRAMS HELD', v: b.grams + ' g', sub: 'TWG · self-custody wallet', c: 'var(--gold)' },
+        { label: 'CURRENT VALUE', v: this.eur(val), sub: '@ €' + price.toFixed(2) + '/g live', c: 'var(--text)' },
+        { label: 'COST BASIS', v: this.eur(cost), sub: 'avg €' + b.basis.toFixed(2) + '/g', c: 'var(--t3)' },
+        { label: 'UNREALIZED P/L', v: (pl >= 0 ? '+' : '') + this.eur(pl), sub: ((pl / cost * 100) >= 0 ? '+' : '') + (pl / cost * 100).toFixed(1) + '%', c: pl >= 0 ? '#34d399' : '#f87171' },
+        { label: 'JURISDICTION', v: 'MiCA — active', sub: st.pg.varaCred ? '+ Dubai: VARA-recognized, investment-only' : 'EU passporting in force', c: '#4f8ef7' }
+      ],
+      spotLine: this.linePath(ser, 340, 110, sMin, sMax),
+      portLine: this.linePath(ser.map(p => p * (0.985 + .0002 * b.grams)), 340, 110, sMin, sMax),
+      bHistory: b.history.slice().reverse().map(h => ({
+        ...h, color: h.type === 'BUY' ? '#34d399' : h.type === 'AUTO-REDEEM' ? '#a78bfa' : 'var(--gold)',
+        line: h.grams + ' g @ €' + h.price.toFixed(2) + '/g · ' + this.eur(h.grams * h.price)
+      })),
+      fanBand: this.bandPath(f10, f90, 340, 110, fMin, fMax),
+      fanP50: this.linePath(f50, 340, 110, fMin, fMax),
+      fanHi: this.eur(f90[12]), fanLo: this.eur(f10[12]), fanMid: this.eur(f50[12]),
+      // rules
+      rfType: st.ruleForm.type,
+      onRfType: (e) => this.setRuleForm('type', e), onRfTh: (e) => this.setRuleForm('threshold', e), onRfG: (e) => this.setRuleForm('grams', e),
+      rfThreshold: st.ruleForm.threshold, rfGrams: st.ruleForm.grams,
+      rfThPh: 'e.g. ' + (st.ruleForm.type === 'take-profit' ? (price + 1.5).toFixed(2) : st.ruleForm.type === 'rebalance' ? '100 (grams cap)' : (price - 1.5).toFixed(2)),
+      doAddRule: () => this.addRule(),
+      noRules: st.rules.length === 0,
+      rulesList: st.rules.map(r => ({
+        ...r,
+        name: typeNames[r.type],
+        cond: r.type === 'rebalance' ? 'holdings > ' + r.threshold + ' g' : (r.type === 'take-profit' ? 'price ≥ €' : 'price ≤ €') + r.threshold + '/g',
+        act: r.type === 'alert' ? 'Notify holder only — never acts' : r.type === 'rebalance' ? 'Redeem excess above ' + r.threshold + ' g → RLUSD' : 'Redeem ' + r.grams + ' g → RLUSD atomically',
+        stColor: stColors[r.status], stLabel: r.status.toUpperCase() + (r.firedAt ? ' · ' + r.firedAt : ''),
+        toggleLabel: r.status === 'paused' ? 'Arm' : 'Pause',
+        doToggle: () => this.toggleRule(r.id), doDel: () => this.delRule(r.id),
+        canToggle: r.status !== 'triggered'
+      }))
+    };
+  }
+
+  renderVals() {
+    const st = this.state;
+    const L = { ai: '#a78bfa', domain: '#4f8ef7', dnft: '#D9A94B', reserve: '#34d399' };
+    const tones = { gold: '#D9A94B', green: '#34d399', red: '#f87171', violet: '#a78bfa' };
+    const nav = [
+      { k: 'landing', label: 'Home' }, { k: 'playground', label: 'Sandbox' }
+    ].map(n => ({
+      ...n, go: () => this.setView(n.k),
+      bg: st.view === n.k ? 'rgba(217,169,75,.13)' : 'transparent',
+      color: st.view === n.k ? 'var(--gold)' : 'var(--t3)',
+      weight: st.view === n.k ? 600 : 500
+    }));
+    return {
+      ...this.pgVals(L),
+      ...this.dashVals(L),
+      ...this.marketVals(),
+      isMarket: st.view === 'market', goMarket: () => this.setView('market'),
+      ...this.cpVals(),
+      ...this.advVals(),
+      ...this.landingVals(),
+      ...this.flowVals(),
+      toggleTheme: () => this.toggleTheme(),
+      themeIcon: st.theme === 'dark' ? '🌙' : '☀️',
+      knobLeft: st.theme === 'dark' ? '3px' : '30px',
+      navItems: nav,
+      waitEmail: st.waitEmail,
+      setWaitEmail: (ev) => this.setState({ waitEmail: ev.target.value }),
+      joinWaitlist: () => this.joinWaitlist(),
+      isLanding: st.view === 'landing', isPg: st.view === 'playground', isCopilot: st.view === 'copilot', isAdvisor: st.view === 'advisor', isDash: st.view === 'dash',
+      goLanding: () => this.setView('landing'), goPg: () => this.setView('playground'), goCopilot: () => this.setView('copilot'), goAdvisor: () => this.setView('advisor'), goDash: () => this.setView('dash'),
+      priceStr: st.price.toFixed(2),
+      deltaStr: (st.lastDelta >= 0 ? '▲' : '▼') + Math.abs(st.lastDelta).toFixed(2),
+      deltaColor: st.lastDelta >= 0 ? '#34d399' : '#f87171',
+      toasts: st.toasts.map(t => ({ ...t, dot: tones[t.tone] || tones.gold, border: (tones[t.tone] || tones.gold) + '44' }))
+    };
+  }
+}
+</script>
+</body>
+</html>
